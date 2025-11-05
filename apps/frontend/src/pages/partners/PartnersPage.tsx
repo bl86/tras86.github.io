@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 interface Partner {
   id: string;
   name: string;
-  taxId: string | null;
+  taxNumber: string | null;
   type: string;
   email: string | null;
   phone: string | null;
@@ -27,7 +27,7 @@ export const PartnersPage = ({ companyId }: { companyId: string }) => {
   const [filterType, setFilterType] = useState<string>('');
   const [formData, setFormData] = useState({
     name: '',
-    taxId: '',
+    taxNumber: '',
     type: 'CUSTOMER',
     email: '',
     phone: '',
@@ -73,7 +73,7 @@ export const PartnersPage = ({ companyId }: { companyId: string }) => {
 
   const openCreateModal = () => {
     setEditingPartner(null);
-    setFormData({ name: '', taxId: '', type: 'CUSTOMER', email: '', phone: '', address: '', city: '' });
+    setFormData({ name: '', taxNumber: '', type: 'CUSTOMER', email: '', phone: '', address: '', city: '' });
     setIsModalOpen(true);
   };
 
@@ -81,7 +81,7 @@ export const PartnersPage = ({ companyId }: { companyId: string }) => {
     setEditingPartner(partner);
     setFormData({
       name: partner.name,
-      taxId: partner.taxId || '',
+      taxNumber: partner.taxNumber || '',
       type: partner.type,
       email: partner.email || '',
       phone: partner.phone || '',
@@ -113,7 +113,7 @@ export const PartnersPage = ({ companyId }: { companyId: string }) => {
 
   const columns = [
     { header: 'Name', accessor: 'name' as keyof Partner },
-    { header: 'Tax ID', accessor: 'taxId' as keyof Partner },
+    { header: 'Tax Number (JIB)', accessor: 'taxNumber' as keyof Partner },
     {
       header: 'Type',
       accessor: (row: Partner) => (
@@ -167,9 +167,11 @@ export const PartnersPage = ({ companyId }: { companyId: string }) => {
             required
           />
           <Input
-            label="Tax ID"
-            value={formData.taxId}
-            onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+            label="Tax Number (JIB)"
+            value={formData.taxNumber}
+            onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
+            placeholder="13 digits"
+            maxLength={13}
           />
           <Select
             label="Partner Type"

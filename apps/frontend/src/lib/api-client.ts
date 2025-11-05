@@ -73,22 +73,22 @@ class ApiClient {
   // Companies
   async getCompanies() {
     const response = await this.client.get('/companies');
-    return response.data;
+    return response.data.companies || [];
   }
 
   async getCompany(id: string) {
     const response = await this.client.get(`/companies/${id}`);
-    return response.data;
+    return response.data.company;
   }
 
   async createCompany(data: any) {
     const response = await this.client.post('/companies', data);
-    return response.data;
+    return response.data.company;
   }
 
   async updateCompany(id: string, data: any) {
     const response = await this.client.put(`/companies/${id}`, data);
-    return response.data;
+    return response.data.company;
   }
 
   async deleteCompany(id: string) {
@@ -99,22 +99,22 @@ class ApiClient {
   // Chart of Accounts
   async getAccounts(companyId: string) {
     const response = await this.client.get(`/companies/${companyId}/accounts`);
-    return response.data;
+    return response.data.accounts || [];
   }
 
   async getAccount(companyId: string, accountId: string) {
     const response = await this.client.get(`/companies/${companyId}/accounts/${accountId}`);
-    return response.data;
+    return response.data.account;
   }
 
   async createAccount(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/accounts`, data);
-    return response.data;
+    return response.data.account;
   }
 
   async updateAccount(companyId: string, accountId: string, data: any) {
     const response = await this.client.put(`/companies/${companyId}/accounts/${accountId}`, data);
-    return response.data;
+    return response.data.account;
   }
 
   async deleteAccount(companyId: string, accountId: string) {
