@@ -1,8 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/stores/auth.store';
+import { apiClient } from '@/lib/api-client';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { CompaniesPage } from '@/pages/companies/CompaniesPage';
+import { AccountsPage } from '@/pages/accounts/AccountsPage';
+import { PartnersPage } from '@/pages/partners/PartnersPage';
 
-// Simple Login Page with working API connection test
+// Login Page
 const LoginPage = () => {
   const [email, setEmail] = useState('admin@accounting-bih.com');
   const [password, setPassword] = useState('Admin123!');
@@ -80,111 +86,132 @@ const LoginPage = () => {
   );
 };
 
-// Simple Dashboard with Backend Status
+// Dashboard with Company Selector
 const DashboardPage = () => {
-  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking');
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-
-  useEffect(() => {
-    const checkBackend = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/health');
-        if (response.ok) {
-          setBackendStatus('connected');
-        } else {
-          setBackendStatus('error');
-        }
-      } catch {
-        setBackendStatus('error');
-      }
-    };
-
-    checkBackend();
-    const interval = setInterval(checkBackend, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: companies = [], isLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: () => apiClient.getCompanies(),
+  });
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold">Accounting System BiH</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">{user?.email}</span>
-              <button
-                onClick={logout}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">System Status</h2>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-3 h-3 rounded-full ${
-                  backendStatus === 'connected'
-                    ? 'bg-green-500'
-                    : backendStatus === 'checking'
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-                }`}
-              />
-              <span>Backend API: {backendStatus}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
-              <span>Frontend: Connected</span>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-2">Companies</h3>
+          <p className="text-3xl font-bold text-blue-600">{companies.length}</p>
         </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-2">Backend Status</h3>
+          <p className="text-sm text-green-600">✓ Connected</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold mb-2">Active Users</h3>
+          <p className="text-3xl font-bold text-purple-600">1</p>
+        </div>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-4">Welcome!</h2>
-          <p className="text-gray-600 mb-4">
-            Your accounting system is running. The complete system includes:
-          </p>
-          <ul className="list-disc list-inside space-y-2 text-gray-600">
-            <li>Authentication & Authorization (JWT + RBAC)</li>
-            <li>Multi-company Management</li>
-            <li>Chart of Accounts (Kontni Plan)</li>
-            <li>General Ledger (Glavna Knjiga)</li>
-            <li>Payroll for RS & FBiH</li>
-            <li>Partners Management</li>
-            <li>Cost Centers</li>
-          </ul>
-          <p className="mt-4 text-sm text-gray-500">
-            API available at: http://localhost:3000/api/v1
-          </p>
-        </div>
-      </main>
+      <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold mb-4">Available Modules</h2>
+        <ul className="space-y-2">
+          <li>✅ Authentication & Authorization (JWT + RBAC)</li>
+          <li>✅ Multi-company Management</li>
+          <li>✅ Chart of Accounts (Kontni Plan)</li>
+          <li>✅ General Ledger (Glavna Knjiga)</li>
+          <li>✅ Partners Management (Kupci/Dobavljači)</li>
+          <li>✅ Payroll for RS & FBiH</li>
+          <li>✅ Cost Centers</li>
+          <li>✅ Employees</li>
+          <li>🔜 Financial Reports</li>
+          <li>🔜 KIF/KUF (Invoices)</li>
+        </ul>
+      </div>
     </div>
   );
 };
 
+// Company Wrapper Component
+const CompanyWrapper = ({ children }: { children: (companyId: string) => React.ReactNode }) => {
+  const { data: companies = [], isLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: () => apiClient.getCompanies(),
+  });
+
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+
+  if (isLoading) {
+    return <div className="p-6">Loading companies...</div>;
+  }
+
+  if (companies.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-yellow-800">No companies found. Please create a company first.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Auto-select first company if none selected
+  const companyId = selectedCompanyId || companies[0]?.id;
+
+  return (
+    <div>
+      <div className="bg-white border-b p-4">
+        <label className="block text-sm font-medium mb-2">Select Company:</label>
+        <select
+          value={companyId}
+          onChange={(e) => setSelectedCompanyId(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {companies.map((company: any) => (
+            <option key={company.id} value={company.id}>
+              {company.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {companyId && children(companyId)}
+    </div>
+  );
+};
+
+// Placeholder pages
+const JournalEntriesPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Journal Entries</h1><p className="mt-4">Coming soon...</p></div>;
+const EmployeesPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Employees</h1><p className="mt-4">Coming soon...</p></div>;
+const PayrollPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Payroll</h1><p className="mt-4">Coming soon...</p></div>;
+const CostCentersPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Cost Centers</h1><p className="mt-4">Coming soon...</p></div>;
+const ReportsPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p className="mt-4">Coming soon...</p></div>;
+
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    );
+  }
+
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={!isAuthenticated ? <LoginPage /> : <Navigate to="/dashboard" />}
-      />
-      <Route
-        path="/dashboard"
-        element={isAuthenticated ? <DashboardPage /> : <Navigate to="/login" />}
-      />
-      <Route path="/" element={<Navigate to="/dashboard" />} />
-    </Routes>
+    <MainLayout>
+      <Routes>
+        <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/companies" element={<CompaniesPage />} />
+        <Route path="/accounts" element={<CompanyWrapper>{(companyId) => <AccountsPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/partners" element={<CompanyWrapper>{(companyId) => <PartnersPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/journal-entries" element={<JournalEntriesPage />} />
+        <Route path="/employees" element={<EmployeesPage />} />
+        <Route path="/payroll" element={<PayrollPage />} />
+        <Route path="/cost-centers" element={<CostCentersPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/" element={<Navigate to="/dashboard" />} />
+      </Routes>
+    </MainLayout>
   );
 }
 

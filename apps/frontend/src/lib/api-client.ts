@@ -1,0 +1,239 @@
+/**
+ * API Client - Centralized HTTP client with interceptors
+ */
+import axios, { AxiosInstance, AxiosError } from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
+
+class ApiClient {
+  private client: AxiosInstance;
+
+  constructor() {
+    this.client = axios.create({
+      baseURL: API_BASE_URL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    // Request interceptor - add token
+    this.client.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor - handle errors
+    this.client.interceptors.response.use(
+      (response) => response,
+      async (error: AxiosError) => {
+        if (error.response?.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  // Auth
+  async login(email: string, password: string) {
+    const response = await this.client.post('/auth/login', { email, password });
+    return response.data;
+  }
+
+  async register(data: { email: string; password: string; firstName: string; lastName: string }) {
+    const response = await this.client.post('/auth/register', data);
+    return response.data;
+  }
+
+  // Companies
+  async getCompanies() {
+    const response = await this.client.get('/companies');
+    return response.data;
+  }
+
+  async getCompany(id: string) {
+    const response = await this.client.get(`/companies/${id}`);
+    return response.data;
+  }
+
+  async createCompany(data: any) {
+    const response = await this.client.post('/companies', data);
+    return response.data;
+  }
+
+  async updateCompany(id: string, data: any) {
+    const response = await this.client.put(`/companies/${id}`, data);
+    return response.data;
+  }
+
+  async deleteCompany(id: string) {
+    const response = await this.client.delete(`/companies/${id}`);
+    return response.data;
+  }
+
+  // Chart of Accounts
+  async getAccounts(companyId: string) {
+    const response = await this.client.get(`/companies/${companyId}/accounts`);
+    return response.data;
+  }
+
+  async getAccount(companyId: string, accountId: string) {
+    const response = await this.client.get(`/companies/${companyId}/accounts/${accountId}`);
+    return response.data;
+  }
+
+  async createAccount(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/accounts`, data);
+    return response.data;
+  }
+
+  async updateAccount(companyId: string, accountId: string, data: any) {
+    const response = await this.client.put(`/companies/${companyId}/accounts/${accountId}`, data);
+    return response.data;
+  }
+
+  async deleteAccount(companyId: string, accountId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/accounts/${accountId}`);
+    return response.data;
+  }
+
+  // Partners
+  async getPartners(companyId: string, params?: any) {
+    const response = await this.client.get(`/companies/${companyId}/partners`, { params });
+    return response.data;
+  }
+
+  async getPartner(companyId: string, partnerId: string) {
+    const response = await this.client.get(`/companies/${companyId}/partners/${partnerId}`);
+    return response.data;
+  }
+
+  async createPartner(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/partners`, data);
+    return response.data;
+  }
+
+  async updatePartner(companyId: string, partnerId: string, data: any) {
+    const response = await this.client.put(`/companies/${companyId}/partners/${partnerId}`, data);
+    return response.data;
+  }
+
+  async deletePartner(companyId: string, partnerId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/partners/${partnerId}`);
+    return response.data;
+  }
+
+  // Cost Centers
+  async getCostCenters(companyId: string) {
+    const response = await this.client.get(`/companies/${companyId}/cost-centers`);
+    return response.data;
+  }
+
+  async createCostCenter(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/cost-centers`, data);
+    return response.data;
+  }
+
+  async updateCostCenter(companyId: string, costCenterId: string, data: any) {
+    const response = await this.client.put(`/companies/${companyId}/cost-centers/${costCenterId}`, data);
+    return response.data;
+  }
+
+  async deleteCostCenter(companyId: string, costCenterId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/cost-centers/${costCenterId}`);
+    return response.data;
+  }
+
+  // Employees
+  async getEmployees(companyId: string) {
+    const response = await this.client.get(`/companies/${companyId}/employees`);
+    return response.data;
+  }
+
+  async createEmployee(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/employees`, data);
+    return response.data;
+  }
+
+  async updateEmployee(companyId: string, employeeId: string, data: any) {
+    const response = await this.client.put(`/companies/${companyId}/employees/${employeeId}`, data);
+    return response.data;
+  }
+
+  async deleteEmployee(companyId: string, employeeId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/employees/${employeeId}`);
+    return response.data;
+  }
+
+  // Journal Entries
+  async getJournalEntries(companyId: string, params?: any) {
+    const response = await this.client.get(`/companies/${companyId}/journal-entries`, { params });
+    return response.data;
+  }
+
+  async getJournalEntry(companyId: string, entryId: string) {
+    const response = await this.client.get(`/companies/${companyId}/journal-entries/${entryId}`);
+    return response.data;
+  }
+
+  async createJournalEntry(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/journal-entries`, data);
+    return response.data;
+  }
+
+  async updateJournalEntry(companyId: string, entryId: string, data: any) {
+    const response = await this.client.put(`/companies/${companyId}/journal-entries/${entryId}`, data);
+    return response.data;
+  }
+
+  async postJournalEntry(companyId: string, entryId: string) {
+    const response = await this.client.post(`/companies/${companyId}/journal-entries/${entryId}/post`);
+    return response.data;
+  }
+
+  async reverseJournalEntry(companyId: string, entryId: string) {
+    const response = await this.client.post(`/companies/${companyId}/journal-entries/${entryId}/reverse`);
+    return response.data;
+  }
+
+  async deleteJournalEntry(companyId: string, entryId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/journal-entries/${entryId}`);
+    return response.data;
+  }
+
+  // Payroll
+  async getPayrollRuns(companyId: string) {
+    const response = await this.client.get(`/companies/${companyId}/payroll`);
+    return response.data;
+  }
+
+  async createPayrollRun(companyId: string, data: any) {
+    const response = await this.client.post(`/companies/${companyId}/payroll`, data);
+    return response.data;
+  }
+
+  async approvePayrollRun(companyId: string, payrollId: string) {
+    const response = await this.client.post(`/companies/${companyId}/payroll/${payrollId}/approve`);
+    return response.data;
+  }
+
+  async deletePayrollRun(companyId: string, payrollId: string) {
+    const response = await this.client.delete(`/companies/${companyId}/payroll/${payrollId}`);
+    return response.data;
+  }
+}
+
+export const apiClient = new ApiClient();
