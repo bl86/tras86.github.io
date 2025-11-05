@@ -4,7 +4,6 @@
  */
 
 import { prisma } from '@/shared/infrastructure/database/prisma';
-import { cache } from '@/shared/infrastructure/cache/redis';
 import { NotFoundError, BadRequestError, ForbiddenError } from '@/shared/domain/errors/app-error';
 import { Decimal } from 'decimal.js';
 import { JournalEntryStatus, FiscalPeriod, DocumentType } from '@prisma/client';
@@ -124,7 +123,7 @@ export class GeneralLedgerService {
   /**
    * Post journal entry (change status from DRAFT to POSTED)
    */
-  async postJournalEntry(entryId: string, companyId: string, userId: string) {
+  async postJournalEntry(entryId: string, companyId: string, _userId: string) {
     const entry = await this.getJournalEntryById(entryId, companyId);
 
     if (entry.status !== JournalEntryStatus.DRAFT) {

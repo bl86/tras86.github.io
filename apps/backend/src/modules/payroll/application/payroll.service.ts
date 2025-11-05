@@ -155,11 +155,11 @@ export class PayrollService {
     });
 
     // Calculate totals
-    const totalGross = employeePayrolls.reduce((sum, p) => sum + p.grossSalary, 0);
-    const totalNet = employeePayrolls.reduce((sum, p) => sum + p.netSalary, 0);
-    const totalTax = employeePayrolls.reduce((sum, p) => sum + p.incomeTax, 0);
+    const totalGross = employeePayrolls.reduce((sum: number, p) => sum + p.grossSalary, 0);
+    const totalNet = employeePayrolls.reduce((sum: number, p) => sum + p.netSalary, 0);
+    const totalTax = employeePayrolls.reduce((sum: number, p) => sum + p.incomeTax, 0);
     const totalSocialContributions = employeePayrolls.reduce(
-      (sum, p) =>
+      (sum: number, p) =>
         sum +
         p.pioEmployee +
         p.healthEmployee +

@@ -14,7 +14,7 @@ import { prisma } from '@/shared/infrastructure/database/prisma';
 export const requireRole = (...roles: UserRole[]) => {
   return async (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
@@ -47,7 +47,7 @@ export const requireRole = (...roles: UserRole[]) => {
 export const requirePermission = (...permissions: Permission[]) => {
   return async (
     req: Request,
-    res: Response,
+    _res: Response,
     next: NextFunction
   ): Promise<void> => {
     try {
@@ -89,7 +89,7 @@ export const requirePermission = (...permissions: Permission[]) => {
  */
 export const requireCompanyAccess = async (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {

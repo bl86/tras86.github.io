@@ -5,7 +5,7 @@
 
 import { prisma } from '@/shared/infrastructure/database/prisma';
 import { cache } from '@/shared/infrastructure/cache/redis';
-import { NotFoundError, ConflictError } from '@/shared/domain/errors/app-error';
+import { NotFoundError } from '@/shared/domain/errors/app-error';
 
 interface CreatePartnerDto {
   name: string;
