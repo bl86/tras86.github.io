@@ -37,9 +37,16 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor - handle errors
+    // Response interceptor - unwrap backend response format and handle errors
     this.client.interceptors.response.use(
-      (response) => response,
+      (response) => {
+        // Backend wraps all responses in { status: 'success', data: {...} }
+        // Automatically unwrap to get just the data
+        if (response.data && response.data.status === 'success' && response.data.data !== undefined) {
+          response.data = response.data.data;
+        }
+        return response;
+      },
       async (error: AxiosError) => {
         if (error.response?.status === 401) {
           // Token expired or invalid

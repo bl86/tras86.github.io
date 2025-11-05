@@ -43,15 +43,18 @@ const LoginPage = () => {
 
       const data = await response.json();
       console.log('📬 Raw login response:', data);
+
+      // Backend returns: { status: 'success', data: { user, accessToken, refreshToken } }
+      // Extract the actual data from the wrapper
+      const authData = data.data || data;
       console.log('📬 Login data received:', {
-        hasToken: !!data.data?.accessToken,
-        hasUser: !!data.data?.user,
-        tokenPreview: data.data?.accessToken?.substring(0, 20)
+        hasToken: !!authData.accessToken,
+        hasUser: !!authData.user,
+        tokenPreview: authData.accessToken?.substring(0, 20)
       });
 
       // Call login to save to store and localStorage
-      // Backend returns: { status: 'success', data: { user, accessToken, refreshToken } }
-      login(data.data.accessToken, data.data.user);
+      login(authData.accessToken, authData.user);
       console.log('✅ Login function called, redirecting to /dashboard');
 
       // Redirect to dashboard
