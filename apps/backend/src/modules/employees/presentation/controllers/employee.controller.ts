@@ -16,7 +16,10 @@ export class EmployeeController {
         orderBy: { lastName: 'asc' },
       });
 
-      res.json(employees);
+      res.status(200).json({
+        status: 'success',
+        data: { employees },
+      });
     } catch (error) {
       next(error);
     }
@@ -34,7 +37,10 @@ export class EmployeeController {
         throw new NotFoundError('Employee not found');
       }
 
-      res.json(employee);
+      res.status(200).json({
+        status: 'success',
+        data: { employee },
+      });
     } catch (error) {
       next(error);
     }
@@ -53,7 +59,10 @@ export class EmployeeController {
         },
       });
 
-      res.status(201).json(employee);
+      res.status(201).json({
+        status: 'success',
+        data: { employee },
+      });
     } catch (error) {
       next(error);
     }
@@ -77,7 +86,10 @@ export class EmployeeController {
         where: { id: employeeId, companyId },
       });
 
-      res.json(updated);
+      res.status(200).json({
+        status: 'success',
+        data: { employee: updated },
+      });
     } catch (error) {
       next(error);
     }

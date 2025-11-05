@@ -14,7 +14,10 @@ export class CostCenterController {
         where: { companyId },
         orderBy: { code: 'asc' },
       });
-      res.json(costCenters);
+      res.status(200).json({
+        status: 'success',
+        data: { costCenters },
+      });
     } catch (error) {
       next(error);
     }
@@ -26,7 +29,10 @@ export class CostCenterController {
       const costCenter = await prisma.costCenter.create({
         data: { ...req.body, companyId, isActive: true },
       });
-      res.status(201).json(costCenter);
+      res.status(201).json({
+        status: 'success',
+        data: { costCenter },
+      });
     } catch (error) {
       next(error);
     }
@@ -41,7 +47,10 @@ export class CostCenterController {
       });
       if (costCenter.count === 0) throw new NotFoundError('Cost center not found');
       const updated = await prisma.costCenter.findFirst({ where: { id: costCenterId } });
-      res.json(updated);
+      res.status(200).json({
+        status: 'success',
+        data: { costCenter: updated },
+      });
     } catch (error) {
       next(error);
     }

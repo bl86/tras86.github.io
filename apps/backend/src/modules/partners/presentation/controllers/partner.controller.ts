@@ -18,7 +18,10 @@ export class PartnerController {
 
       const partners = await partnerService.getPartners(companyId);
 
-      res.json(partners);
+      res.status(200).json({
+        status: 'success',
+        data: { partners },
+      });
     } catch (error) {
       next(error);
     }
@@ -32,7 +35,10 @@ export class PartnerController {
       const { companyId, partnerId } = req.params;
       const partner = await partnerService.getPartnerById(partnerId, companyId);
 
-      res.json(partner);
+      res.status(200).json({
+        status: 'success',
+        data: { partner },
+      });
     } catch (error) {
       next(error);
     }
@@ -47,7 +53,10 @@ export class PartnerController {
 
       const partner = await partnerService.createPartner(companyId, req.body);
 
-      res.status(201).json(partner);
+      res.status(201).json({
+        status: 'success',
+        data: { partner },
+      });
     } catch (error) {
       next(error);
     }
@@ -66,7 +75,10 @@ export class PartnerController {
         req.body
       );
 
-      res.json(partner);
+      res.status(200).json({
+        status: 'success',
+        data: { partner },
+      });
     } catch (error) {
       next(error);
     }

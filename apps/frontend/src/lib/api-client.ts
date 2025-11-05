@@ -125,22 +125,22 @@ class ApiClient {
   // Partners
   async getPartners(companyId: string, params?: any) {
     const response = await this.client.get(`/companies/${companyId}/partners`, { params });
-    return response.data;
+    return response.data.partners || [];
   }
 
   async getPartner(companyId: string, partnerId: string) {
     const response = await this.client.get(`/companies/${companyId}/partners/${partnerId}`);
-    return response.data;
+    return response.data.partner;
   }
 
   async createPartner(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/partners`, data);
-    return response.data;
+    return response.data.partner;
   }
 
   async updatePartner(companyId: string, partnerId: string, data: any) {
     const response = await this.client.put(`/companies/${companyId}/partners/${partnerId}`, data);
-    return response.data;
+    return response.data.partner;
   }
 
   async deletePartner(companyId: string, partnerId: string) {
@@ -151,17 +151,17 @@ class ApiClient {
   // Cost Centers
   async getCostCenters(companyId: string) {
     const response = await this.client.get(`/companies/${companyId}/cost-centers`);
-    return response.data;
+    return response.data.costCenters || [];
   }
 
   async createCostCenter(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/cost-centers`, data);
-    return response.data;
+    return response.data.costCenter;
   }
 
   async updateCostCenter(companyId: string, costCenterId: string, data: any) {
     const response = await this.client.put(`/companies/${companyId}/cost-centers/${costCenterId}`, data);
-    return response.data;
+    return response.data.costCenter;
   }
 
   async deleteCostCenter(companyId: string, costCenterId: string) {
@@ -172,17 +172,17 @@ class ApiClient {
   // Employees
   async getEmployees(companyId: string) {
     const response = await this.client.get(`/companies/${companyId}/employees`);
-    return response.data;
+    return response.data.employees || [];
   }
 
   async createEmployee(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/employees`, data);
-    return response.data;
+    return response.data.employee;
   }
 
   async updateEmployee(companyId: string, employeeId: string, data: any) {
     const response = await this.client.put(`/companies/${companyId}/employees/${employeeId}`, data);
-    return response.data;
+    return response.data.employee;
   }
 
   async deleteEmployee(companyId: string, employeeId: string) {
