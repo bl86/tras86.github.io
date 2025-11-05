@@ -9,8 +9,9 @@ WORKDIR /app
 COPY apps/backend/package*.json ./
 COPY apps/backend/prisma ./prisma/
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (skip puppeteer download for now)
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+RUN npm install
 
 # Copy source
 COPY apps/backend ./
@@ -36,13 +37,14 @@ RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 # Copy package files
 COPY apps/backend/package*.json ./
 COPY apps/backend/prisma ./prisma/
 
 # Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --only=production && npm cache clean --force
 
 # Copy built application
 COPY --from=builder /app/dist ./dist
