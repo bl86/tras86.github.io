@@ -62,90 +62,249 @@ async function main() {
 
   // ==================== COMPANIES ====================
   console.log('');
-  console.log('🏢 Creating companies...');
+  console.log('🏢 Creating 10 companies...');
 
-  const companyRS = await prisma.company.upsert({
-    where: { taxNumber: '4400000000001' },
-    update: {},
-    create: {
-      name: 'ABC Trade d.o.o. Banja Luka',
-      taxNumber: '4400000000001',
-      vatNumber: '440000000001',
-      registrationNumber: '1234567890',
-      address: 'Kralja Petra I Karađorđevića 100',
-      city: 'Banja Luka',
-      postalCode: '78000',
-      country: 'BiH',
-      legalEntity: 'RS',
-      bankName: 'UniCredit Bank d.d.',
-      bankAccount: 'BA395551234567890123',
-      swift: 'UNCRBA22',
-      fiscalYearStart: 1,
-      fiscalYearEnd: 12,
-      baseCurrency: 'BAM',
-      isActive: true,
-    },
+  const companies = await Promise.all([
+    prisma.company.upsert({
+      where: { taxNumber: '4400000000001' },
+      update: {},
+      create: {
+        name: 'ABC Trade d.o.o. Banja Luka',
+        taxNumber: '4400000000001',
+        vatNumber: '440000000001',
+        registrationNumber: '1234567890',
+        address: 'Kralja Petra I Karađorđevića 100',
+        city: 'Banja Luka',
+        postalCode: '78000',
+        country: 'BiH',
+        legalEntity: 'RS',
+        bankName: 'UniCredit Bank d.d.',
+        bankAccount: 'BA395551234567890123',
+        swift: 'UNCRBA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4200000000001' },
+      update: {},
+      create: {
+        name: 'XYZ Solutions d.o.o. Sarajevo',
+        taxNumber: '4200000000001',
+        vatNumber: '420000000001',
+        registrationNumber: '9876543210',
+        address: 'Zmaja od Bosne 8',
+        city: 'Sarajevo',
+        postalCode: '71000',
+        country: 'BiH',
+        legalEntity: 'FBIH',
+        bankName: 'Raiffeisen Bank d.d. BiH',
+        bankAccount: 'BA393331234567890123',
+        swift: 'RZBABA2S',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4900000000001' },
+      update: {},
+      create: {
+        name: 'Tech Services d.o.o. Brčko',
+        taxNumber: '4900000000001',
+        vatNumber: '490000000001',
+        registrationNumber: '5555555555',
+        address: 'Bulevar Mira 77',
+        city: 'Brčko',
+        postalCode: '76100',
+        country: 'BiH',
+        legalEntity: 'BD',
+        bankName: 'Intesa Sanpaolo Bank',
+        bankAccount: 'BA392221234567890123',
+        swift: 'INTABA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4400000000002' },
+      update: {},
+      create: {
+        name: 'Delta Commerce d.o.o. Prijedor',
+        taxNumber: '4400000000002',
+        vatNumber: '440000000002',
+        registrationNumber: '2345678901',
+        address: 'Svetosavska 45',
+        city: 'Prijedor',
+        postalCode: '79101',
+        country: 'BiH',
+        legalEntity: 'RS',
+        bankName: 'Nova Banka d.d.',
+        bankAccount: 'BA395552345678901234',
+        swift: 'NOVABA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4200000000002' },
+      update: {},
+      create: {
+        name: 'Gamma Consulting d.o.o. Tuzla',
+        taxNumber: '4200000000002',
+        vatNumber: '420000000002',
+        registrationNumber: '3456789012',
+        address: 'Turalibegova 15',
+        city: 'Tuzla',
+        postalCode: '75000',
+        country: 'BiH',
+        legalEntity: 'FBIH',
+        bankName: 'Sparkasse Bank d.d.',
+        bankAccount: 'BA393343456789012345',
+        swift: 'SPARBABA',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4400000000003' },
+      update: {},
+      create: {
+        name: 'Epsilon Industries d.o.o. Doboj',
+        taxNumber: '4400000000003',
+        vatNumber: '440000000003',
+        registrationNumber: '4567890123',
+        address: 'Kneza Lazara 22',
+        city: 'Doboj',
+        postalCode: '74000',
+        country: 'BiH',
+        legalEntity: 'RS',
+        bankName: 'Hypo Alpe Adria Bank d.d.',
+        bankAccount: 'BA395554567890123456',
+        swift: 'HAABBA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4200000000003' },
+      update: {},
+      create: {
+        name: 'Zeta Logistics d.o.o. Mostar',
+        taxNumber: '4200000000003',
+        vatNumber: '420000000003',
+        registrationNumber: '5678901234',
+        address: 'Bulevar Narodne revolucije 100',
+        city: 'Mostar',
+        postalCode: '88000',
+        country: 'BiH',
+        legalEntity: 'FBIH',
+        bankName: 'UniCredit Bank d.d.',
+        bankAccount: 'BA393345678901234567',
+        swift: 'UNCRBA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4400000000004' },
+      update: {},
+      create: {
+        name: 'Theta Manufacturing d.o.o. Bijeljina',
+        taxNumber: '4400000000004',
+        vatNumber: '440000000004',
+        registrationNumber: '6789012345',
+        address: 'Karađorđeva 88',
+        city: 'Bijeljina',
+        postalCode: '76300',
+        country: 'BiH',
+        legalEntity: 'RS',
+        bankName: 'NLB Banka d.d.',
+        bankAccount: 'BA395556789012345678',
+        swift: 'NLBABA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4200000000004' },
+      update: {},
+      create: {
+        name: 'Iota Retail d.o.o. Zenica',
+        taxNumber: '4200000000004',
+        vatNumber: '420000000004',
+        registrationNumber: '7890123456',
+        address: 'Maršala Tita 33',
+        city: 'Zenica',
+        postalCode: '72000',
+        country: 'BiH',
+        legalEntity: 'FBIH',
+        bankName: 'ProCredit Bank d.d.',
+        bankAccount: 'BA393347890123456789',
+        swift: 'MFTCBA22',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+    prisma.company.upsert({
+      where: { taxNumber: '4400000000005' },
+      update: {},
+      create: {
+        name: 'Kappa IT Solutions d.o.o. Trebinje',
+        taxNumber: '4400000000005',
+        vatNumber: '440000000005',
+        registrationNumber: '8901234567',
+        address: 'Jovan Dučić 12',
+        city: 'Trebinje',
+        postalCode: '89101',
+        country: 'BiH',
+        legalEntity: 'RS',
+        bankName: 'Addiko Bank d.d.',
+        bankAccount: 'BA395558901234567890',
+        swift: 'HAABBA2S',
+        fiscalYearStart: 1,
+        fiscalYearEnd: 12,
+        baseCurrency: 'BAM',
+        isActive: true,
+      },
+    }),
+  ]);
+
+  const [companyRS, companyFBIH, companyBD] = companies;
+
+  companies.forEach((company, index) => {
+    console.log(`  ✅ Company ${index + 1} created: ${company.name}`);
   });
-  console.log('  ✅ Company (RS) created:', companyRS.name);
 
-  const companyFBIH = await prisma.company.upsert({
-    where: { taxNumber: '4200000000001' },
-    update: {},
-    create: {
-      name: 'XYZ Solutions d.o.o. Sarajevo',
-      taxNumber: '4200000000001',
-      vatNumber: '420000000001',
-      registrationNumber: '9876543210',
-      address: 'Zmaja od Bosne 8',
-      city: 'Sarajevo',
-      postalCode: '71000',
-      country: 'BiH',
-      legalEntity: 'FBIH',
-      bankName: 'Raiffeisen Bank d.d. BiH',
-      bankAccount: 'BA393331234567890123',
-      swift: 'RZBABA2S',
-      fiscalYearStart: 1,
-      fiscalYearEnd: 12,
-      baseCurrency: 'BAM',
-      isActive: true,
-    },
+  // Grant BOTH superAdmin AND accountant access to ALL companies
+  const accessData: { userId: string; companyId: string }[] = [];
+  companies.forEach((company) => {
+    accessData.push({ userId: superAdmin.id, companyId: company.id });
+    accessData.push({ userId: accountant.id, companyId: company.id });
   });
-  console.log('  ✅ Company (FBIH) created:', companyFBIH.name);
 
-  const companyBD = await prisma.company.upsert({
-    where: { taxNumber: '4900000000001' },
-    update: {},
-    create: {
-      name: 'Tech Services d.o.o. Brčko',
-      taxNumber: '4900000000001',
-      vatNumber: '490000000001',
-      registrationNumber: '5555555555',
-      address: 'Bulevar Mira 77',
-      city: 'Brčko',
-      postalCode: '76100',
-      country: 'BiH',
-      legalEntity: 'BD',
-      bankName: 'Intesa Sanpaolo Bank',
-      bankAccount: 'BA392221234567890123',
-      swift: 'INTABA22',
-      fiscalYearStart: 1,
-      fiscalYearEnd: 12,
-      baseCurrency: 'BAM',
-      isActive: true,
-    },
-  });
-  console.log('  ✅ Company (BD) created:', companyBD.name);
-
-  // Grant accountant access to all companies
   await prisma.userCompanyAccess.createMany({
-    data: [
-      { userId: accountant.id, companyId: companyRS.id },
-      { userId: accountant.id, companyId: companyFBIH.id },
-      { userId: accountant.id, companyId: companyBD.id },
-    ],
+    data: accessData,
     skipDuplicates: true,
   });
-  console.log('  ✅ Company access granted to accountant');
+  console.log('  ✅ Company access granted to superAdmin and accountant for all 10 companies');
 
   // ==================== CHART OF ACCOUNTS ====================
   console.log('');
@@ -228,7 +387,7 @@ async function main() {
     { code: '413000', name: 'Kursne razlike - rashodi', type: 'EXPENSE', category: 'FINANCIAL_EXPENSES' },
   ];
 
-  for (const company of [companyRS, companyFBIH, companyBD]) {
+  for (const company of companies) {
     for (const account of accounts) {
       await prisma.account.upsert({
         where: {
@@ -250,7 +409,7 @@ async function main() {
       });
     }
   }
-  console.log(`  ✅ Created ${accounts.length} accounts for each company`);
+  console.log(`  ✅ Created ${accounts.length} accounts for all ${companies.length} companies`);
 
   // ==================== PARTNERS ====================
   console.log('');
@@ -353,7 +512,7 @@ async function main() {
   ];
 
   // Create partners for each company using createMany (more efficient)
-  for (const company of [companyRS, companyFBIH, companyBD]) {
+  for (const company of companies) {
     await prisma.partner.createMany({
       data: partners.map(p => ({
         ...p,
@@ -363,7 +522,7 @@ async function main() {
       skipDuplicates: true,
     });
   }
-  console.log(`  ✅ Created ${partners.length} partners for each company`);
+  console.log(`  ✅ Created ${partners.length} partners for all ${companies.length} companies`);
 
   // ==================== EMPLOYEES ====================
   console.log('');
@@ -478,7 +637,7 @@ async function main() {
     { code: 'CC-006', name: 'Administracija' },
   ];
 
-  for (const company of [companyRS, companyFBIH, companyBD]) {
+  for (const company of companies) {
     for (const cc of costCenters) {
       await prisma.costCenter.upsert({
         where: {
@@ -496,7 +655,7 @@ async function main() {
       });
     }
   }
-  console.log(`  ✅ Created ${costCenters.length} cost centers for each company`);
+  console.log(`  ✅ Created ${costCenters.length} cost centers for all ${companies.length} companies`);
 
   // ==================== SUMMARY ====================
   console.log('');
@@ -509,11 +668,11 @@ async function main() {
   console.log('   └─ Accountant: knjigovodja@example.com / Accountant123!');
   console.log('');
   console.log('📊 Test Data Created:');
-  console.log(`   ┌─ Companies: 3 (RS, FBIH, BD)`);
-  console.log(`   ├─ Chart of Accounts: ${accounts.length} accounts per company`);
-  console.log(`   ├─ Partners: ${partners.length} per company (customers, suppliers, both)`);
+  console.log(`   ┌─ Companies: ${companies.length} (across RS, FBIH, BD entities)`);
+  console.log(`   ├─ Chart of Accounts: ${accounts.length} accounts per company (${accounts.length * companies.length} total)`);
+  console.log(`   ├─ Partners: ${partners.length} per company (${partners.length * companies.length} total)`);
   console.log(`   ├─ Employees: ${allEmployees.length} total (3 RS, 2 FBIH, 2 BD)`);
-  console.log(`   └─ Cost Centers: ${costCenters.length} per company`);
+  console.log(`   └─ Cost Centers: ${costCenters.length} per company (${costCenters.length * companies.length} total)`);
   console.log('');
   console.log('✨ All data ready for testing!');
   console.log('');
