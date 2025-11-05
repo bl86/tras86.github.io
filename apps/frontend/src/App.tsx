@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/stores/auth.store';
 import { apiClient } from '@/lib/api-client';
@@ -16,6 +16,7 @@ import { TestPage } from '@/pages/TestPage';
 
 // Login Page
 const LoginPage = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('admin@accounting-bih.com');
   const [password, setPassword] = useState('Admin123!');
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ const LoginPage = () => {
     setError('');
 
     try {
+      console.log('📨 Sending login request...');
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
@@ -40,8 +42,22 @@ const LoginPage = () => {
       }
 
       const data = await response.json();
-      login(data.accessToken, data.user);
+      console.log('📬 Raw login response:', data);
+      console.log('📬 Login data received:', {
+        hasToken: !!data.data?.accessToken,
+        hasUser: !!data.data?.user,
+        tokenPreview: data.data?.accessToken?.substring(0, 20)
+      });
+
+      // Call login to save to store and localStorage
+      // Backend returns: { status: 'success', data: { user, accessToken, refreshToken } }
+      login(data.data.accessToken, data.data.user);
+      console.log('✅ Login function called, redirecting to /dashboard');
+
+      // Redirect to dashboard
+      navigate('/dashboard');
     } catch (err) {
+      console.error('❌ Login error:', err);
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setLoading(false);
@@ -189,10 +205,13 @@ function App() {
   const initialize = useAuthStore((state) => state.initialize);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  // Initialize auth state from localStorage on app start
+  // Initialize auth state from localStorage ONCE on app start
   useEffect(() => {
+    console.log('🚀 App mounted - calling initialize()');
     initialize();
-  }, [initialize]);
+  }, []); // Empty dependency array - run ONCE!
+
+  console.log('🔍 App render - isAuthenticated:', isAuthenticated);
 
   if (!isAuthenticated) {
     return (
