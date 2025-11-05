@@ -5,6 +5,8 @@
 
 import { Router } from 'express';
 import { authRouter } from '@/modules/auth/presentation/routes';
+import { companyRouter } from '@/modules/companies/presentation/routes';
+import { chartOfAccountsRouter } from '@/modules/chart-of-accounts/presentation/routes';
 
 export const router = Router();
 
@@ -16,13 +18,16 @@ const v1Router = Router();
 // Auth routes
 v1Router.use('/auth', authRouter);
 
-// TODO: Add other module routes
-// v1Router.use('/companies', companyRouter);
-// v1Router.use('/accounts', accountRouter);
-// v1Router.use('/journal-entries', journalEntryRouter);
-// v1Router.use('/invoices', invoiceRouter);
-// v1Router.use('/payroll', payrollRouter);
-// v1Router.use('/reports', reportRouter);
+// Company routes
+v1Router.use('/companies', companyRouter);
+
+// Chart of Accounts routes (nested under companies)
+v1Router.use('/companies', chartOfAccountsRouter);
+
+// General Ledger, Payroll, Reports, etc. can be added here
+// v1Router.use('/companies/:companyId/journal-entries', journalEntryRouter);
+// v1Router.use('/companies/:companyId/payroll', payrollRouter);
+// v1Router.use('/companies/:companyId/reports', reportRouter);
 
 // Mount v1 routes
 router.use('/v1', v1Router);
@@ -38,6 +43,14 @@ router.get('/', (req, res) => {
       v1: '/api/v1',
       health: '/health',
       docs: '/api/docs',
+    },
+    modules: {
+      authentication: '/api/v1/auth',
+      companies: '/api/v1/companies',
+      chartOfAccounts: '/api/v1/companies/:companyId/accounts',
+      generalLedger: '/api/v1/companies/:companyId/journal-entries',
+      payroll: '/api/v1/companies/:companyId/payroll',
+      reports: '/api/v1/companies/:companyId/reports',
     },
   });
 });
