@@ -7,6 +7,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { CompaniesPage } from '@/pages/companies/CompaniesPage';
 import { AccountsPage } from '@/pages/accounts/AccountsPage';
 import { PartnersPage } from '@/pages/partners/PartnersPage';
+import { TestPage } from '@/pages/TestPage';
 
 // Login Page
 const LoginPage = () => {
@@ -88,7 +89,7 @@ const LoginPage = () => {
 
 // Dashboard with Company Selector
 const DashboardPage = () => {
-  const { data: companies = [], isLoading } = useQuery({
+  const { data: companies = [] } = useQuery({
     queryKey: ['companies'],
     queryFn: () => apiClient.getCompanies(),
   });
@@ -209,6 +210,7 @@ function App() {
         <Route path="/payroll" element={<PayrollPage />} />
         <Route path="/cost-centers" element={<CostCentersPage />} />
         <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/test" element={<TestPage />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
     </MainLayout>

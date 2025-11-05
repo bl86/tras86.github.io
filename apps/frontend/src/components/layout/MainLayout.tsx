@@ -23,6 +23,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     { name: 'Payroll', path: '/payroll', icon: '💰' },
     { name: 'Cost Centers', path: '/cost-centers', icon: '🏷️' },
     { name: 'Reports', path: '/reports', icon: '📈' },
+    { name: '🧪 Run Tests', path: '/test', icon: '🧪' },
   ];
 
   const handleLogout = () => {
