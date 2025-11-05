@@ -1,0 +1,779 @@
+// Prisma Schema - Accounting System BiH
+// Database: PostgreSQL 15+
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public", "audit"]
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  ACCOUNTANT
+  ACCOUNTANT_ASSISTANT
+  VIEWER
+  AUDITOR
+
+  @@schema("public")
+}
+
+enum Permission {
+  // Companies
+  COMPANY_CREATE
+  COMPANY_READ
+  COMPANY_UPDATE
+  COMPANY_DELETE
+
+  // General Ledger
+  GL_ENTRY_CREATE
+  GL_ENTRY_READ
+  GL_ENTRY_UPDATE
+  GL_ENTRY_DELETE
+  GL_ENTRY_APPROVE
+  GL_PERIOD_CLOSE
+  GL_PERIOD_REOPEN
+
+  // KIF/KUF
+  INVOICE_CREATE
+  INVOICE_READ
+  INVOICE_UPDATE
+  INVOICE_DELETE
+  INVOICE_APPROVE
+
+  // Payroll
+  PAYROLL_CREATE
+  PAYROLL_READ
+  PAYROLL_CALCULATE
+  PAYROLL_APPROVE
+  PAYROLL_DELETE
+
+  // Reports
+  REPORT_VIEW
+  REPORT_EXPORT
+
+  // Users & Roles
+  USER_MANAGE
+  ROLE_MANAGE
+
+  @@schema("public")
+}
+
+enum AccountType {
+  ASSET       // 0 - Aktiva
+  LIABILITY   // 1 - Pasiva
+  EXPENSE     // 2 - Rashodi
+  REVENUE     // 3 - Prihodi
+  CLOSING     // 4 - Zatvaranje
+
+  @@schema("public")
+}
+
+enum AccountCategory {
+  CURRENT_ASSETS
+  FIXED_ASSETS
+  CURRENT_LIABILITIES
+  LONG_TERM_LIABILITIES
+  EQUITY
+  OPERATING_REVENUE
+  FINANCIAL_REVENUE
+  OPERATING_EXPENSES
+  FINANCIAL_EXPENSES
+  COST_OF_GOODS_SOLD
+
+  @@schema("public")
+}
+
+enum JournalEntryStatus {
+  DRAFT
+  POSTED
+  APPROVED
+  REVERSED
+
+  @@schema("public")
+}
+
+enum DocumentType {
+  MANUAL_ENTRY
+  INVOICE
+  PAYMENT
+  PAYROLL
+  BANK_STATEMENT
+  OPENING_BALANCE
+  CLOSING_ENTRY
+  ADJUSTMENT
+
+  @@schema("public")
+}
+
+enum InvoiceType {
+  INPUT   // KIF - Knjiga ulaznih faktura
+  OUTPUT  // KUF - Knjiga izlaznih faktura
+
+  @@schema("public")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PAID
+  PARTIALLY_PAID
+  OVERDUE
+  CANCELLED
+
+  @@schema("public")
+}
+
+enum VATRate {
+  STANDARD_17 // 17% (RS & FBiH)
+  REDUCED_7   // 7% (RS)
+  EXEMPT_0    // 0% (oslobođeno)
+
+  @@schema("public")
+}
+
+enum PayrollStatus {
+  DRAFT
+  CALCULATED
+  APPROVED
+  PAID
+  ARCHIVED
+
+  @@schema("public")
+}
+
+enum LegalEntity {
+  RS      // Republika Srpska
+  FBIH    // Federacija BiH
+  BD      // Brčko Distrikt
+
+  @@schema("public")
+}
+
+enum Currency {
+  BAM  // Konvertibilna marka
+  EUR  // Euro
+  USD  // US Dollar
+  CHF  // Swiss Franc
+
+  @@schema("public")
+}
+
+enum FiscalPeriod {
+  JANUARY
+  FEBRUARY
+  MARCH
+  APRIL
+  MAY
+  JUNE
+  JULY
+  AUGUST
+  SEPTEMBER
+  OCTOBER
+  NOVEMBER
+  DECEMBER
+
+  @@schema("public")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String // bcrypt hash
+  firstName String
+  lastName  String
+  phone     String?
+  isActive  Boolean  @default(true)
+  language  String   @default("sr") // sr, hr, bs, en, de
+
+  // MFA
+  mfaEnabled Boolean @default(false)
+  mfaSecret  String?
+
+  // Role
+  role        UserRole     @default(ACCOUNTANT)
+  permissions Permission[]
+
+  // Relations
+  companyAccess     UserCompanyAccess[]
+  createdEntries    JournalEntry[]      @relation("CreatedBy")
+  approvedEntries   JournalEntry[]      @relation("ApprovedBy")
+  createdInvoices   Invoice[]           @relation("CreatedBy")
+  approvedInvoices  Invoice[]           @relation("ApprovedBy")
+  createdPayrolls   PayrollRun[]        @relation("CreatedBy")
+  approvedPayrolls  PayrollRun[]        @relation("ApprovedBy")
+  auditLogs         AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@schema("public")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@schema("public")
+}
+
+// ============================================
+// MULTI-TENANCY
+// ============================================
+
+model Company {
+  id   String @id @default(cuid())
+  name String
+
+  // Company details
+  taxNumber       String  @unique // JIB
+  vatNumber       String? @unique // PDV broj
+  registrationNumber String  @unique // Matični broj
+  address         String
+  city            String
+  postalCode      String
+  country         String  @default("BiH")
+  legalEntity     LegalEntity // RS, FBiH, BD
+
+  // Bank details
+  bankName       String?
+  bankAccount    String?
+  swift          String?
+
+  // Fiscal year
+  fiscalYearStart Int @default(1) // 1 = January
+  fiscalYearEnd   Int @default(12) // 12 = December
+
+  // Settings
+  baseCurrency    Currency @default(BAM)
+  isActive        Boolean  @default(true)
+
+  // Relations
+  userAccess       UserCompanyAccess[]
+  accounts         Account[]
+  journalEntries   JournalEntry[]
+  invoices         Invoice[]
+  partners         Partner[]
+  costCenters      CostCenter[]
+  employees        Employee[]
+  payrollRuns      PayrollRun[]
+  fiscalPeriods    FiscalPeriodLock[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taxNumber])
+  @@index([legalEntity])
+  @@schema("public")
+}
+
+model UserCompanyAccess {
+  id        String @id @default(cuid())
+  userId    String
+  companyId String
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, companyId])
+  @@index([userId])
+  @@index([companyId])
+  @@schema("public")
+}
+
+// ============================================
+// CHART OF ACCOUNTS (KONTNI PLAN)
+// ============================================
+
+model Account {
+  id   String @id @default(cuid())
+  code String // npr. "430100"
+  name String
+
+  // Multi-language support
+  nameTranslations Json? // { sr: "...", hr: "...", en: "...", de: "..." }
+
+  // Classification
+  type     AccountType
+  category AccountCategory
+
+  // Hierarchy
+  parentId String?
+  parent   Account?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children Account[] @relation("AccountHierarchy")
+
+  // Flags
+  isActive            Boolean @default(true)
+  requiresCostCenter  Boolean @default(false)
+  requiresPartner     Boolean @default(false)
+  requiresAnalytical  Boolean @default(false)
+
+  // Company
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Relations
+  journalEntryLines JournalEntryLine[]
+  mappings          AccountMapping[]
+  balances          AccountBalance[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@index([code])
+  @@index([type])
+  @@schema("public")
+}
+
+model AccountMapping {
+  id        String @id @default(cuid())
+  accountId String
+  standard  String // "DE_SKR03", "IFRS", etc.
+  mappedCode String
+  mappedName String
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@unique([accountId, standard])
+  @@schema("public")
+}
+
+// ============================================
+// GENERAL LEDGER (GLAVNA KNJIGA)
+// ============================================
+
+model JournalEntry {
+  id            String @id @default(cuid())
+  entryNumber   String // Auto-generated: JE-2025-0001
+  entryDate     DateTime
+  postingDate   DateTime
+  description   String
+  documentNumber String?
+  documentType  DocumentType
+
+  status       JournalEntryStatus @default(DRAFT)
+  fiscalYear   Int
+  fiscalPeriod FiscalPeriod
+
+  // Reversal
+  isReversal     Boolean @default(false)
+  reversalOfId   String?
+  reversalOf     JournalEntry?  @relation("Reversal", fields: [reversalOfId], references: [id])
+  reversedBy     JournalEntry[] @relation("Reversal")
+
+  // Approval
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  // Company & User
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // Relations
+  lines       JournalEntryLine[]
+  attachments Attachment[]
+  invoice     Invoice? // One-to-one if created from invoice
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, entryNumber])
+  @@index([companyId])
+  @@index([entryDate])
+  @@index([status])
+  @@index([fiscalYear, fiscalPeriod])
+  @@schema("public")
+}
+
+model JournalEntryLine {
+  id          String  @id @default(cuid())
+  entryId     String
+  entry       JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+
+  // Account
+  accountId   String
+  account     Account @relation(fields: [accountId], references: [id])
+
+  // Amounts (using Decimal for precision)
+  debit       Decimal @default(0) @db.Decimal(15, 2) // Duguje
+  credit      Decimal @default(0) @db.Decimal(15, 2) // Potražuje
+
+  description String?
+
+  // Optional dimensions
+  costCenterId String?
+  costCenter   CostCenter? @relation(fields: [costCenterId], references: [id])
+
+  partnerId String?
+  partner   Partner? @relation(fields: [partnerId], references: [id])
+
+  analyticalAccount String? // For additional analytics
+
+  lineNumber Int // Order of lines
+
+  @@index([entryId])
+  @@index([accountId])
+  @@schema("public")
+}
+
+model AccountBalance {
+  id        String @id @default(cuid())
+  accountId String
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  fiscalYear   Int
+  fiscalPeriod FiscalPeriod
+
+  // Balances
+  openingDebit  Decimal @default(0) @db.Decimal(15, 2)
+  openingCredit Decimal @default(0) @db.Decimal(15, 2)
+  debitTurnover Decimal @default(0) @db.Decimal(15, 2)
+  creditTurnover Decimal @default(0) @db.Decimal(15, 2)
+  closingDebit  Decimal @default(0) @db.Decimal(15, 2)
+  closingCredit Decimal @default(0) @db.Decimal(15, 2)
+
+  @@unique([accountId, fiscalYear, fiscalPeriod])
+  @@index([fiscalYear, fiscalPeriod])
+  @@schema("public")
+}
+
+model FiscalPeriodLock {
+  id        String @id @default(cuid())
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  fiscalYear   Int
+  fiscalPeriod FiscalPeriod
+
+  isLocked Boolean @default(false)
+  lockedAt DateTime?
+  lockedBy String? // userId
+
+  @@unique([companyId, fiscalYear, fiscalPeriod])
+  @@schema("public")
+}
+
+// ============================================
+// KIF/KUF (INVOICES)
+// ============================================
+
+model Invoice {
+  id            String @id @default(cuid())
+  type          InvoiceType // INPUT or OUTPUT
+  invoiceNumber String
+  invoiceDate   DateTime
+  dueDate       DateTime
+
+  // Partner
+  partnerId String
+  partner   Partner @relation(fields: [partnerId], references: [id])
+
+  // Amounts
+  taxBase      Decimal @db.Decimal(15, 2)
+  vatAmount    Decimal @db.Decimal(15, 2)
+  totalAmount  Decimal @db.Decimal(15, 2)
+  vatRate      VATRate
+
+  // Currency
+  currency     Currency @default(BAM)
+  exchangeRate Decimal? @db.Decimal(10, 4)
+
+  // Status
+  status       InvoiceStatus @default(DRAFT)
+
+  // Payment tracking
+  paidAmount   Decimal @default(0) @db.Decimal(15, 2)
+
+  // Description
+  description  String?
+  notes        String?
+
+  // Company
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Created/Approved by
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  // Relations
+  items         InvoiceItem[]
+  journalEntryId String?      @unique
+  journalEntry  JournalEntry? @relation(fields: [journalEntryId], references: [id])
+  attachments   Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, type, invoiceNumber])
+  @@index([companyId])
+  @@index([type])
+  @@index([invoiceDate])
+  @@index([partnerId])
+  @@schema("public")
+}
+
+model InvoiceItem {
+  id          String @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  description String
+  quantity    Decimal @db.Decimal(10, 3)
+  unitPrice   Decimal @db.Decimal(15, 2)
+  amount      Decimal @db.Decimal(15, 2)
+  vatRate     VATRate
+  vatAmount   Decimal @db.Decimal(15, 2)
+  totalAmount Decimal @db.Decimal(15, 2)
+
+  lineNumber  Int
+
+  @@index([invoiceId])
+  @@schema("public")
+}
+
+// ============================================
+// PARTNERS (CUSTOMERS & SUPPLIERS)
+// ============================================
+
+model Partner {
+  id   String @id @default(cuid())
+  name String
+  type String // CUSTOMER, SUPPLIER, BOTH
+
+  // Tax details
+  taxNumber  String?
+  vatNumber  String?
+
+  // Contact
+  address    String?
+  city       String?
+  postalCode String?
+  country    String?
+  email      String?
+  phone      String?
+
+  // Bank details
+  bankAccount String?
+  swift       String?
+
+  isActive Boolean @default(true)
+
+  // Company
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Relations
+  invoices          Invoice[]
+  journalEntryLines JournalEntryLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([taxNumber])
+  @@schema("public")
+}
+
+// ============================================
+// COST CENTERS
+// ============================================
+
+model CostCenter {
+  id          String  @id @default(cuid())
+  code        String
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  journalEntryLines JournalEntryLine[]
+
+  @@unique([companyId, code])
+  @@index([companyId])
+  @@schema("public")
+}
+
+// ============================================
+// PAYROLL (OBRAČUN PLATA)
+// ============================================
+
+model Employee {
+  id          String  @id @default(cuid())
+  firstName   String
+  lastName    String
+  personalId  String  @unique // JMBG
+  taxNumber   String?
+  email       String?
+  phone       String?
+
+  // Employment details
+  employmentDate DateTime
+  terminationDate DateTime?
+  isActive       Boolean  @default(true)
+
+  // Salary
+  baseSalary Decimal @db.Decimal(10, 2)
+
+  // Bank details
+  bankAccount String?
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  // Relations
+  payrolls EmployeePayroll[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@index([personalId])
+  @@schema("public")
+}
+
+model PayrollRun {
+  id     String @id @default(cuid())
+  period String // "2025-01"
+  entity LegalEntity // RS or FBIH
+
+  status PayrollStatus @default(DRAFT)
+
+  // Totals
+  totalGross                 Decimal @db.Decimal(15, 2)
+  totalNet                   Decimal @db.Decimal(15, 2)
+  totalTax                   Decimal @db.Decimal(15, 2)
+  totalSocialContributions   Decimal @db.Decimal(15, 2)
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  calculatedById String
+  calculatedBy   User   @relation("CreatedBy", fields: [calculatedById], references: [id])
+
+  approvedById String?
+  approvedBy   User?     @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt   DateTime?
+
+  // Relations
+  employees EmployeePayroll[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, period])
+  @@index([companyId])
+  @@index([period])
+  @@schema("public")
+}
+
+model EmployeePayroll {
+  id           String @id @default(cuid())
+  payrollRunId String
+  payrollRun   PayrollRun @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  // Amounts
+  grossSalary       Decimal @db.Decimal(10, 2)
+  netSalary         Decimal @db.Decimal(10, 2)
+  taxableBase       Decimal @db.Decimal(10, 2)
+  incomeTax         Decimal @db.Decimal(10, 2)
+
+  // Contributions (Employee)
+  pioEmployee         Decimal @db.Decimal(10, 2)
+  healthEmployee      Decimal @db.Decimal(10, 2)
+  unemploymentEmployee Decimal @default(0) @db.Decimal(10, 2)
+
+  // Contributions (Employer)
+  pioEmployer         Decimal @db.Decimal(10, 2)
+  healthEmployer      Decimal @db.Decimal(10, 2)
+  unemploymentEmployer Decimal @default(0) @db.Decimal(10, 2)
+
+  // Deductions & Additions (JSON for flexibility)
+  deductions Json? // [{ type: "advance", amount: 500 }]
+  additions  Json? // [{ type: "bonus", amount: 1000 }]
+
+  @@index([payrollRunId])
+  @@index([employeeId])
+  @@schema("public")
+}
+
+// ============================================
+// ATTACHMENTS
+// ============================================
+
+model Attachment {
+  id       String @id @default(cuid())
+  filename String
+  mimeType String
+  size     Int
+  url      String // S3/MinIO URL
+
+  // Polymorphic relations
+  journalEntryId String?
+  journalEntry   JournalEntry? @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  uploadedAt DateTime @default(now())
+
+  @@schema("public")
+}
+
+// ============================================
+// AUDIT LOG (Separate Schema)
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String   // CREATE, UPDATE, DELETE, APPROVE, etc.
+  entity    String   // JournalEntry, Invoice, etc.
+  entityId  String
+  changes   Json?    // Old & new values
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([timestamp])
+  @@schema("audit")
+}
