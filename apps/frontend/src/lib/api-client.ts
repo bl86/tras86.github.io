@@ -24,8 +24,13 @@ class ApiClient {
     this.client.interceptors.request.use(
       (config) => {
         const token = localStorage.getItem('accessToken');
+        console.log('🔍 API Request:', config.url);
+        console.log('🔑 Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NULL');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('✅ Authorization header set');
+        } else {
+          console.error('❌ NO TOKEN FOUND in localStorage!');
         }
         return config;
       },
