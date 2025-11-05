@@ -234,6 +234,35 @@ class ApiClient {
     const response = await this.client.delete(`/companies/${companyId}/payroll/${payrollId}`);
     return response.data;
   }
+
+  // Reports
+  async generateBalanceSheet(companyId: string, endDate: string) {
+    const response = await this.client.get(`/companies/${companyId}/reports/balance-sheet`, {
+      params: { endDate },
+    });
+    return response.data;
+  }
+
+  async generateProfitAndLoss(companyId: string, startDate: string, endDate: string) {
+    const response = await this.client.get(`/companies/${companyId}/reports/profit-and-loss`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  async generateCashFlow(companyId: string, startDate: string, endDate: string) {
+    const response = await this.client.get(`/companies/${companyId}/reports/cash-flow`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  async generateAllReports(companyId: string, startDate: string, endDate: string) {
+    const response = await this.client.get(`/companies/${companyId}/reports/all`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -11,6 +11,7 @@ import { EmployeesPage } from '@/pages/employees/EmployeesPage';
 import { CostCentersPage } from '@/pages/cost-centers/CostCentersPage';
 import { JournalEntriesPage } from '@/pages/journal-entries/JournalEntriesPage';
 import { PayrollPage } from '@/pages/payroll/PayrollPage';
+import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { TestPage } from '@/pages/TestPage';
 
 // Login Page
@@ -128,7 +129,7 @@ const DashboardPage = () => {
           <li>✅ Payroll for RS & FBiH</li>
           <li>✅ Cost Centers</li>
           <li>✅ Employees</li>
-          <li>🔜 Financial Reports</li>
+          <li>✅ Financial Reports (Balance Sheet, P&L, Cash Flow)</li>
           <li>🔜 KIF/KUF (Invoices)</li>
         </ul>
       </div>
@@ -183,8 +184,6 @@ const CompanyWrapper = ({ children }: { children: (companyId: string) => React.R
   );
 };
 
-// Placeholder pages
-const ReportsPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p className="mt-4">Coming soon...</p></div>;
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -209,7 +208,7 @@ function App() {
         <Route path="/cost-centers" element={<CompanyWrapper>{(companyId) => <CostCentersPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/journal-entries" element={<CompanyWrapper>{(companyId) => <JournalEntriesPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/payroll" element={<CompanyWrapper>{(companyId) => <PayrollPage companyId={companyId} />}</CompanyWrapper>} />
-        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports" element={<CompanyWrapper>{(companyId) => <ReportsPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
