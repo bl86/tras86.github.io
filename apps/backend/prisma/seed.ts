@@ -492,53 +492,6 @@ async function main() {
   }
   console.log(`  ✅ Created ${costCenters.length} cost centers for each company`);
 
-  // ==================== FISCAL PERIODS ====================
-  console.log('');
-  console.log('📅 Creating fiscal periods for 2024 and 2025...');
-
-  for (const company of [companyRS, companyFBIH, companyBD]) {
-    // 2024
-    for (let month = 1; month <= 12; month++) {
-      await prisma.fiscalPeriod.upsert({
-        where: {
-          companyId_year_month: {
-            companyId: company.id,
-            year: 2024,
-            month,
-          },
-        },
-        update: {},
-        create: {
-          companyId: company.id,
-          year: 2024,
-          month,
-          isClosed: month < 11, // Close months before November
-        },
-      });
-    }
-
-    // 2025
-    for (let month = 1; month <= 12; month++) {
-      await prisma.fiscalPeriod.upsert({
-        where: {
-          companyId_year_month: {
-            companyId: company.id,
-            year: 2025,
-            month,
-          },
-        },
-        update: {},
-        create: {
-          companyId: company.id,
-          year: 2025,
-          month,
-          isClosed: false,
-        },
-      });
-    }
-  }
-  console.log('  ✅ Created fiscal periods for 2024 and 2025');
-
   // ==================== SUMMARY ====================
   console.log('');
   console.log('═══════════════════════════════════════════════');
@@ -554,8 +507,7 @@ async function main() {
   console.log(`   ├─ Chart of Accounts: ${accounts.length} accounts per company`);
   console.log(`   ├─ Partners: ${partners.length} per company (customers, suppliers, both)`);
   console.log(`   ├─ Employees: ${employees.length} per company`);
-  console.log(`   ├─ Cost Centers: ${costCenters.length} per company`);
-  console.log(`   └─ Fiscal Periods: 24 periods (2024-2025) per company`);
+  console.log(`   └─ Cost Centers: ${costCenters.length} per company`);
   console.log('');
   console.log('✨ All data ready for testing!');
   console.log('');
