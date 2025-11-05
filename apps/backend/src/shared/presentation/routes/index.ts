@@ -8,6 +8,8 @@ import { authRouter } from '@/modules/auth/presentation/routes';
 import { companyRouter } from '@/modules/companies/presentation/routes';
 import { chartOfAccountsRouter } from '@/modules/chart-of-accounts/presentation/routes';
 import { partnerRouter } from '@/modules/partners/presentation/routes';
+import { employeeRouter } from '@/modules/employees/presentation/routes';
+import { costCenterRouter } from '@/modules/cost-centers/presentation/routes';
 
 export const router = Router();
 
@@ -27,6 +29,12 @@ v1Router.use('/companies', chartOfAccountsRouter);
 
 // Partner routes (nested under companies)
 v1Router.use('/companies', partnerRouter);
+
+// Employee routes (nested under companies)
+v1Router.use('/companies', employeeRouter);
+
+// Cost Center routes (nested under companies)
+v1Router.use('/companies', costCenterRouter);
 
 // Mount v1 routes
 router.use('/v1', v1Router);

@@ -15,12 +15,8 @@ export class PartnerController {
   async getPartners(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { companyId } = req.params;
-      const { type } = req.query;
 
-      const filters: any = {};
-      if (type) filters.type = type;
-
-      const partners = await partnerService.getPartners(companyId, filters);
+      const partners = await partnerService.getPartners(companyId);
 
       res.json(partners);
     } catch (error) {
@@ -34,7 +30,7 @@ export class PartnerController {
   async getPartner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { companyId, partnerId } = req.params;
-      const partner = await partnerService.getPartner(partnerId, companyId);
+      const partner = await partnerService.getPartnerById(partnerId, companyId);
 
       res.json(partner);
     } catch (error) {
@@ -48,9 +44,8 @@ export class PartnerController {
   async createPartner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { companyId } = req.params;
-      const userId = req.user!.userId;
 
-      const partner = await partnerService.createPartner(companyId, userId, req.body);
+      const partner = await partnerService.createPartner(companyId, req.body);
 
       res.status(201).json(partner);
     } catch (error) {
@@ -64,12 +59,10 @@ export class PartnerController {
   async updatePartner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { companyId, partnerId } = req.params;
-      const userId = req.user!.userId;
 
       const partner = await partnerService.updatePartner(
         partnerId,
         companyId,
-        userId,
         req.body
       );
 
@@ -85,9 +78,8 @@ export class PartnerController {
   async deletePartner(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { companyId, partnerId } = req.params;
-      const userId = req.user!.userId;
 
-      await partnerService.deletePartner(partnerId, companyId, userId);
+      await partnerService.deactivatePartner(partnerId, companyId);
 
       res.status(204).send();
     } catch (error) {

@@ -7,6 +7,10 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { CompaniesPage } from '@/pages/companies/CompaniesPage';
 import { AccountsPage } from '@/pages/accounts/AccountsPage';
 import { PartnersPage } from '@/pages/partners/PartnersPage';
+import { EmployeesPage } from '@/pages/employees/EmployeesPage';
+import { CostCentersPage } from '@/pages/cost-centers/CostCentersPage';
+import { JournalEntriesPage } from '@/pages/journal-entries/JournalEntriesPage';
+import { PayrollPage } from '@/pages/payroll/PayrollPage';
 import { TestPage } from '@/pages/TestPage';
 
 // Login Page
@@ -180,10 +184,6 @@ const CompanyWrapper = ({ children }: { children: (companyId: string) => React.R
 };
 
 // Placeholder pages
-const JournalEntriesPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Journal Entries</h1><p className="mt-4">Coming soon...</p></div>;
-const EmployeesPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Employees</h1><p className="mt-4">Coming soon...</p></div>;
-const PayrollPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Payroll</h1><p className="mt-4">Coming soon...</p></div>;
-const CostCentersPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Cost Centers</h1><p className="mt-4">Coming soon...</p></div>;
 const ReportsPage = () => <div className="p-6"><h1 className="text-2xl font-bold">Reports</h1><p className="mt-4">Coming soon...</p></div>;
 
 function App() {
@@ -205,10 +205,10 @@ function App() {
         <Route path="/companies" element={<CompaniesPage />} />
         <Route path="/accounts" element={<CompanyWrapper>{(companyId) => <AccountsPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/partners" element={<CompanyWrapper>{(companyId) => <PartnersPage companyId={companyId} />}</CompanyWrapper>} />
-        <Route path="/journal-entries" element={<JournalEntriesPage />} />
-        <Route path="/employees" element={<EmployeesPage />} />
-        <Route path="/payroll" element={<PayrollPage />} />
-        <Route path="/cost-centers" element={<CostCentersPage />} />
+        <Route path="/employees" element={<CompanyWrapper>{(companyId) => <EmployeesPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/cost-centers" element={<CompanyWrapper>{(companyId) => <CostCentersPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/journal-entries" element={<CompanyWrapper>{(companyId) => <JournalEntriesPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/payroll" element={<CompanyWrapper>{(companyId) => <PayrollPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />

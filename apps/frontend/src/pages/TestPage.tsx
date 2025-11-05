@@ -3,7 +3,7 @@
  * Tests all API endpoints and components
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 
 interface TestResult {
