@@ -190,7 +190,14 @@ export class GeneralLedgerService {
     }
 
     // Create reversal entry with swapped debits and credits
-    const reversalLines = originalEntry.lines.map((line) => ({
+    const reversalLines = originalEntry.lines.map((line: {
+      accountId: string;
+      debit: { toString: () => string };
+      credit: { toString: () => string };
+      description: string | null;
+      costCenterId: string | null;
+      partnerId: string | null;
+    }) => ({
       accountId: line.accountId,
       debit: parseFloat(line.credit.toString()),
       credit: parseFloat(line.debit.toString()),

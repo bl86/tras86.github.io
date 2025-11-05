@@ -37,7 +37,7 @@ if (process.env.NODE_ENV !== 'production') {
  * Log queries in development
  */
 if (process.env.NODE_ENV === 'development') {
-  prisma.$on('query', (e: any) => {
+  prisma.$on('query', (e: { query: string; duration: number }) => {
     logger.debug('Query: ' + e.query);
     logger.debug('Duration: ' + e.duration + 'ms');
   });
@@ -46,7 +46,7 @@ if (process.env.NODE_ENV === 'development') {
 /**
  * Prisma middleware for audit logging
  */
-prisma.$use(async (params, next) => {
+prisma.$use(async (params: { model?: string; action: string }, next: (params: unknown) => Promise<unknown>) => {
   const before = Date.now();
   const result = await next(params);
   const after = Date.now();

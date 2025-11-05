@@ -29,6 +29,26 @@ const FBIH_TAX_RATES = {
   UNEMPLOYMENT_EMPLOYER: 0.005,      // 0.5% nezaposlenost poslodavac
 };
 
+interface PayrollCalculation {
+  grossSalary: number;
+  incomeTax: number;
+  pioEmployee: number;
+  healthEmployee: number;
+  unemploymentEmployee: number;
+  totalDeductions: number;
+  netSalary: number;
+  pioEmployer: number;
+  healthEmployer: number;
+  unemploymentEmployer: number;
+  totalEmployerCost: number;
+}
+
+interface EmployeePayroll extends PayrollCalculation {
+  employeeId: string;
+  deductions: unknown;
+  additions: unknown;
+}
+
 export class PayrollService {
   /**
    * Calculate payroll for RS employee
@@ -140,7 +160,10 @@ export class PayrollService {
     }
 
     // Calculate payroll for each employee
-    const employeePayrolls = employees.map((employee) => {
+    const employeePayrolls = employees.map((employee: {
+      id: string;
+      baseSalary: { toString: () => string };
+    }) => {
       const calculation =
         entity === LegalEntity.RS
           ? this.calculateRSPayroll(parseFloat(employee.baseSalary.toString()))
@@ -155,11 +178,11 @@ export class PayrollService {
     });
 
     // Calculate totals
-    const totalGross = employeePayrolls.reduce((sum: number, p) => sum + p.grossSalary, 0);
-    const totalNet = employeePayrolls.reduce((sum: number, p) => sum + p.netSalary, 0);
-    const totalTax = employeePayrolls.reduce((sum: number, p) => sum + p.incomeTax, 0);
+    const totalGross = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.grossSalary, 0);
+    const totalNet = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.netSalary, 0);
+    const totalTax = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.incomeTax, 0);
     const totalSocialContributions = employeePayrolls.reduce(
-      (sum: number, p) =>
+      (sum: number, p: EmployeePayroll) =>
         sum +
         p.pioEmployee +
         p.healthEmployee +

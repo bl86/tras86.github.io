@@ -16,7 +16,7 @@ export const errorHandler = (
   error: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   logger.error('Error occurred:', {
     error: error.message,
@@ -50,8 +50,8 @@ export const errorHandler = (
   }
 
   // Prisma errors
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    return handlePrismaError(error, res);
+  if ('code' in error && 'meta' in error && error.constructor.name === 'PrismaClientKnownRequestError') {
+    return handlePrismaError(error as Prisma.PrismaClientKnownRequestError, res);
   }
 
   // JWT errors

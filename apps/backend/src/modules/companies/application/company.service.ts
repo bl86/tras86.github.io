@@ -26,7 +26,7 @@ export class CompanyService {
       include: { company: true },
     });
 
-    const companies = userCompanyAccess.map((access) => access.company);
+    const companies = userCompanyAccess.map((access: { company: Company }) => access.company);
 
     // Cache for 1 hour
     await cache.set(cacheKey, companies, 3600);
@@ -230,7 +230,16 @@ export class CompanyService {
       },
     });
 
-    return accesses.map((access) => access.user);
+    return accesses.map((access: {
+      user: {
+        id: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        role: string;
+        isActive: boolean;
+      };
+    }) => access.user);
   }
 
   /**

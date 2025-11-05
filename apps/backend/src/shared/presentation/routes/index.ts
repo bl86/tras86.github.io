@@ -35,7 +35,7 @@ router.use('/v1', v1Router);
 /**
  * API Documentation route
  */
-router.get('/', (req, res) => {
+router.get('/', (_req, res) => {
   res.json({
     message: 'Accounting System BiH - API',
     version: '1.0.0',
