@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '@/shared/stores/auth.store';
@@ -186,7 +186,13 @@ const CompanyWrapper = ({ children }: { children: (companyId: string) => React.R
 
 
 function App() {
+  const initialize = useAuthStore((state) => state.initialize);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  // Initialize auth state from localStorage on app start
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   if (!isAuthenticated) {
     return (

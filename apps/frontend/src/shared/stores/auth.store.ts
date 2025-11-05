@@ -1,10 +1,9 @@
 /**
- * Authentication Store
- * Zustand store for authentication state
+ * Authentication Store - SIMPLE VERSION WITHOUT PERSIST
+ * No caching issues - direct localStorage management
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 interface User {
   id: string;
@@ -17,75 +16,80 @@ interface User {
 interface AuthState {
   user: User | null;
   accessToken: string | null;
-  refreshToken: string | null;
   isAuthenticated: boolean;
 
-  login: (accessToken: string, user: User, refreshToken?: string) => void;
+  // Initialize from localStorage
+  initialize: () => void;
+
+  // Login - save to localStorage
+  login: (accessToken: string, user: User) => void;
+
+  // Logout - clear localStorage
   logout: () => void;
-  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
-  clearAuth: () => void;
-  updateAccessToken: (accessToken: string) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+
+  // Initialize auth state from localStorage on app start
+  initialize: () => {
+    const token = localStorage.getItem('accessToken');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        set({
+          accessToken: token,
+          user,
+          isAuthenticated: true,
+        });
+      } catch (error) {
+        // Invalid data, clear everything
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('user');
+        set({
+          user: null,
+          accessToken: null,
+          isAuthenticated: false,
+        });
+      }
+    } else {
+      set({
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
+      });
+    }
+  },
+
+  // Login - save to state AND localStorage
+  login: (accessToken, user) => {
+    // Save to localStorage
+    localStorage.setItem('accessToken', accessToken);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    // Update state
+    set({
+      accessToken,
+      user,
+      isAuthenticated: true,
+    });
+  },
+
+  // Logout - clear state AND localStorage
+  logout: () => {
+    // Clear localStorage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('user');
+
+    // Clear state
+    set({
       user: null,
       accessToken: null,
-      refreshToken: null,
       isAuthenticated: false,
-
-      login: (accessToken, user, refreshToken = '') => {
-        localStorage.setItem('accessToken', accessToken);
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
-        }
-        set({
-          user,
-          accessToken,
-          refreshToken,
-          isAuthenticated: true,
-        });
-      },
-
-      logout: () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        });
-      },
-
-      setAuth: (user, accessToken, refreshToken) =>
-        set({
-          user,
-          accessToken,
-          refreshToken,
-          isAuthenticated: true,
-        }),
-
-      clearAuth: () =>
-        set({
-          user: null,
-          accessToken: null,
-          refreshToken: null,
-          isAuthenticated: false,
-        }),
-
-      updateAccessToken: (accessToken) =>
-        set({ accessToken }),
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        accessToken: state.accessToken,
-        refreshToken: state.refreshToken,
-        isAuthenticated: state.isAuthenticated,
-      }),
-    }
-  )
-);
+    });
+  },
+}));
