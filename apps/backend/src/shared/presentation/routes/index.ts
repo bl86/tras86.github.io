@@ -7,6 +7,7 @@ import { Router } from 'express';
 import { authRouter } from '@/modules/auth/presentation/routes';
 import { companyRouter } from '@/modules/companies/presentation/routes';
 import { chartOfAccountsRouter } from '@/modules/chart-of-accounts/presentation/routes';
+import { partnerRouter } from '@/modules/partners/presentation/routes';
 
 export const router = Router();
 
@@ -24,10 +25,8 @@ v1Router.use('/companies', companyRouter);
 // Chart of Accounts routes (nested under companies)
 v1Router.use('/companies', chartOfAccountsRouter);
 
-// General Ledger, Payroll, Reports, etc. can be added here
-// v1Router.use('/companies/:companyId/journal-entries', journalEntryRouter);
-// v1Router.use('/companies/:companyId/payroll', payrollRouter);
-// v1Router.use('/companies/:companyId/reports', reportRouter);
+// Partner routes (nested under companies)
+v1Router.use('/companies', partnerRouter);
 
 // Mount v1 routes
 router.use('/v1', v1Router);

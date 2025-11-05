@@ -173,12 +173,156 @@ async function main() {
 
   console.log('✅ Chart of accounts created for RS company');
 
+  // Create demo partners (customers and suppliers)
+  const partners = [
+    {
+      name: 'Kupac jedan d.o.o.',
+      taxId: '4400000000002',
+      type: 'CUSTOMER',
+      email: 'kupac1@example.com',
+      phone: '+387 51 123 456',
+      address: 'Trg Krajine 5',
+      city: 'Banja Luka',
+      country: 'BiH',
+    },
+    {
+      name: 'Kupac dva d.o.o.',
+      taxId: '4400000000003',
+      type: 'CUSTOMER',
+      email: 'kupac2@example.com',
+      phone: '+387 51 234 567',
+      address: 'Kralja Petra I 10',
+      city: 'Banja Luka',
+      country: 'BiH',
+    },
+    {
+      name: 'Dobavljač jedan d.o.o.',
+      taxId: '4400000000004',
+      type: 'SUPPLIER',
+      email: 'dobavljac1@example.com',
+      phone: '+387 51 345 678',
+      address: 'Bulevar vojvode Stepe Stepanovića 20',
+      city: 'Banja Luka',
+      country: 'BiH',
+    },
+    {
+      name: 'Partner univerzalni d.o.o.',
+      taxId: '4400000000005',
+      type: 'BOTH',
+      email: 'partner@example.com',
+      phone: '+387 51 456 789',
+      address: 'Ulica Srpskih vladara 15',
+      city: 'Banja Luka',
+      country: 'BiH',
+    },
+  ];
+
+  for (const partner of partners) {
+    await prisma.partner.upsert({
+      where: {
+        companyId_taxId: {
+          companyId: companyRS.id,
+          taxId: partner.taxId,
+        },
+      },
+      update: {},
+      create: {
+        ...partner,
+        companyId: companyRS.id,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log('✅ Partners created for RS company');
+
+  // Create demo employees
+  const employees = [
+    {
+      firstName: 'Petar',
+      lastName: 'Petrović',
+      personalId: '0101990123456',
+      baseSalary: 1500,
+      position: 'Direktor',
+      employmentDate: new Date('2020-01-01'),
+    },
+    {
+      firstName: 'Milica',
+      lastName: 'Milić',
+      personalId: '1505985654321',
+      baseSalary: 1200,
+      position: 'Računovođa',
+      employmentDate: new Date('2021-03-15'),
+    },
+    {
+      firstName: 'Nikola',
+      lastName: 'Nikolić',
+      personalId: '2010995789012',
+      baseSalary: 1000,
+      position: 'Administator',
+      employmentDate: new Date('2022-06-01'),
+    },
+  ];
+
+  for (const employee of employees) {
+    await prisma.employee.upsert({
+      where: {
+        companyId_personalId: {
+          companyId: companyRS.id,
+          personalId: employee.personalId,
+        },
+      },
+      update: {},
+      create: {
+        ...employee,
+        companyId: companyRS.id,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log('✅ Employees created for RS company');
+
+  // Create demo cost centers
+  const costCenters = [
+    { code: 'CC001', name: 'Uprava' },
+    { code: 'CC002', name: 'Računovodstvo' },
+    { code: 'CC003', name: 'Prodaja' },
+    { code: 'CC004', name: 'Nabavka' },
+  ];
+
+  for (const cc of costCenters) {
+    await prisma.costCenter.upsert({
+      where: {
+        companyId_code: {
+          companyId: companyRS.id,
+          code: cc.code,
+        },
+      },
+      update: {},
+      create: {
+        ...cc,
+        companyId: companyRS.id,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log('✅ Cost centers created for RS company');
+
   console.log('');
   console.log('🎉 Seeding completed!');
   console.log('');
   console.log('📝 Login credentials:');
   console.log('   Super Admin: admin@accounting-bih.com / Admin123!');
   console.log('   Accountant: knjigovodja@example.com / Accountant123!');
+  console.log('');
+  console.log('📊 Test data created:');
+  console.log(`   - 2 Companies (RS & FBiH)`);
+  console.log(`   - ${accounts.length} Accounts`);
+  console.log(`   - ${partners.length} Partners`);
+  console.log(`   - ${employees.length} Employees`);
+  console.log(`   - ${costCenters.length} Cost Centers`);
   console.log('');
 }
 
