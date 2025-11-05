@@ -178,7 +178,7 @@ async function main() {
     { code: '112200', name: 'Uredska oprema', type: 'ASSET', category: 'FIXED_ASSETS' },
     { code: '112300', name: 'Vozila', type: 'ASSET', category: 'FIXED_ASSETS' },
     { code: '113000', name: 'Nematerijalna imovina', type: 'ASSET', category: 'FIXED_ASSETS' },
-    { code: '113100', name: 'Softver i licencse', type: 'ASSET', category: 'FIXED_ASSETS' },
+    { code: '113100', name: 'Softver i licence', type: 'ASSET', category: 'FIXED_ASSETS' },
 
     // PASIVA - Liabilities
     { code: '200000', name: 'PASIVA', type: 'LIABILITY', category: 'CURRENT_LIABILITIES' },
@@ -260,7 +260,7 @@ async function main() {
     // Customers
     {
       name: 'Maloprodaja RS d.o.o.',
-      taxId: '4400111111111',
+      taxNumber: '4400111111111',
       type: 'CUSTOMER',
       email: 'info@maloprodaja-rs.ba',
       phone: '+387 51 222 333',
@@ -271,7 +271,7 @@ async function main() {
     },
     {
       name: 'Trgovina Centar d.o.o.',
-      taxId: '4200222222222',
+      taxNumber: '4200222222222',
       type: 'CUSTOMER',
       email: 'kontakt@trgovina-centar.ba',
       phone: '+387 33 444 555',
@@ -282,7 +282,7 @@ async function main() {
     },
     {
       name: 'Metro Grupa d.o.o.',
-      taxId: '4200333333333',
+      taxNumber: '4200333333333',
       type: 'CUSTOMER',
       email: 'office@metro-grupa.ba',
       phone: '+387 33 666 777',
@@ -295,7 +295,7 @@ async function main() {
     // Suppliers
     {
       name: 'Dobavljač Sistem d.o.o.',
-      taxId: '4400444444444',
+      taxNumber: '4400444444444',
       type: 'SUPPLIER',
       email: 'info@dobavljac-sistem.ba',
       phone: '+387 51 888 999',
@@ -305,8 +305,8 @@ async function main() {
       country: 'BiH',
     },
     {
-      name: 'VeleVeleTrade d.o.o.',
-      taxId: '4400555555555',
+      name: 'VeleTrade d.o.o.',
+      taxNumber: '4400555555555',
       type: 'SUPPLIER',
       email: 'prodaja@veletrade.ba',
       phone: '+387 51 111 222',
@@ -317,7 +317,7 @@ async function main() {
     },
     {
       name: 'Uvoznik Premium d.o.o.',
-      taxId: '4200666666666',
+      taxNumber: '4200666666666',
       type: 'SUPPLIER',
       email: 'office@uvoznik-premium.ba',
       phone: '+387 33 333 444',
@@ -330,7 +330,7 @@ async function main() {
     // Both (Customer and Supplier)
     {
       name: 'Partner Universal d.o.o.',
-      taxId: '4400777777777',
+      taxNumber: '4400777777777',
       type: 'BOTH',
       email: 'info@partner-universal.ba',
       phone: '+387 51 555 666',
@@ -341,7 +341,7 @@ async function main() {
     },
     {
       name: 'Komercijala Plus d.o.o.',
-      taxId: '4200888888888',
+      taxNumber: '4200888888888',
       type: 'BOTH',
       email: 'kontakt@komercijala-plus.ba',
       phone: '+387 33 777 888',
@@ -352,23 +352,16 @@ async function main() {
     },
   ];
 
+  // Create partners for each company using createMany (more efficient)
   for (const company of [companyRS, companyFBIH, companyBD]) {
-    for (const partner of partners) {
-      await prisma.partner.upsert({
-        where: {
-          companyId_taxId: {
-            companyId: company.id,
-            taxId: partner.taxId,
-          },
-        },
-        update: {},
-        create: {
-          ...partner,
-          companyId: company.id,
-          isActive: true,
-        },
-      });
-    }
+    await prisma.partner.createMany({
+      data: partners.map(p => ({
+        ...p,
+        companyId: company.id,
+        isActive: true,
+      })),
+      skipDuplicates: true,
+    });
   }
   console.log(`  ✅ Created ${partners.length} partners for each company`);
 
@@ -376,88 +369,101 @@ async function main() {
   console.log('');
   console.log('👤 Creating employees...');
 
-  const employees = [
+  // Create separate employees for each company (personalId must be globally unique)
+  const employeesRS = [
     {
       firstName: 'Petar',
       lastName: 'Petrović',
-      personalId: '0101990123456',
-      email: 'petar.petrovic@example.com',
+      personalId: '0101990123456', // RS employee 1
+      email: 'petar.petrovic@abc-trade.ba',
       phone: '+387 65 111 222',
-      address: 'Kneza Miloša 10',
-      city: 'Banja Luka',
       baseSalary: 2500,
-      position: 'Generalni direktor',
       employmentDate: new Date('2020-01-01'),
+      companyId: companyRS.id,
     },
     {
       firstName: 'Milica',
       lastName: 'Milić',
-      personalId: '1505985654321',
-      email: 'milica.milic@example.com',
+      personalId: '1505985654321', // RS employee 2
+      email: 'milica.milic@abc-trade.ba',
       phone: '+387 65 222 333',
-      address: 'Njegoševa 25',
-      city: 'Banja Luka',
       baseSalary: 1800,
-      position: 'Glavni računovođa',
       employmentDate: new Date('2020-03-15'),
+      companyId: companyRS.id,
     },
     {
       firstName: 'Nikola',
       lastName: 'Nikolić',
-      personalId: '2010995789012',
-      email: 'nikola.nikolic@example.com',
+      personalId: '2010995789012', // RS employee 3
+      email: 'nikola.nikolic@abc-trade.ba',
       phone: '+387 65 333 444',
-      address: 'Cara Dušana 7',
-      city: 'Banja Luka',
       baseSalary: 1400,
-      position: 'Administrativni radnik',
       employmentDate: new Date('2021-06-01'),
-    },
-    {
-      firstName: 'Ana',
-      lastName: 'Anić',
-      personalId: '2505992345678',
-      email: 'ana.anic@example.com',
-      phone: '+387 65 444 555',
-      address: 'Vuka Karadžića 15',
-      city: 'Banja Luka',
-      baseSalary: 1600,
-      position: 'Računovođa',
-      employmentDate: new Date('2021-09-01'),
-    },
-    {
-      firstName: 'Marko',
-      lastName: 'Markovic',
-      personalId: '1201988876543',
-      email: 'marko.markovic@example.com',
-      phone: '+387 65 555 666',
-      address: 'Jovana Dučića 22',
-      city: 'Banja Luka',
-      baseSalary: 1500,
-      position: 'Komercijalista',
-      employmentDate: new Date('2022-02-01'),
+      companyId: companyRS.id,
     },
   ];
 
-  for (const company of [companyRS, companyFBIH, companyBD]) {
-    for (const employee of employees) {
-      await prisma.employee.upsert({
-        where: {
-          companyId_personalId: {
-            companyId: company.id,
-            personalId: employee.personalId,
-          },
-        },
-        update: {},
-        create: {
-          ...employee,
-          companyId: company.id,
-          isActive: true,
-        },
-      });
-    }
+  const employeesFBIH = [
+    {
+      firstName: 'Amina',
+      lastName: 'Alagić',
+      personalId: '0505992111222', // FBIH employee 1
+      email: 'amina.alagic@xyz-solutions.ba',
+      phone: '+387 62 111 222',
+      baseSalary: 2400,
+      employmentDate: new Date('2020-02-01'),
+      companyId: companyFBIH.id,
+    },
+    {
+      firstName: 'Emir',
+      lastName: 'Eminović',
+      personalId: '1212988333444', // FBIH employee 2
+      email: 'emir.eminovic@xyz-solutions.ba',
+      phone: '+387 62 222 333',
+      baseSalary: 1700,
+      employmentDate: new Date('2021-01-15'),
+      companyId: companyFBIH.id,
+    },
+  ];
+
+  const employeesBD = [
+    {
+      firstName: 'Stefan',
+      lastName: 'Stefanović',
+      personalId: '2503994555666', // BD employee 1
+      email: 'stefan.stefanovic@tech-services.ba',
+      phone: '+387 66 111 222',
+      baseSalary: 2200,
+      employmentDate: new Date('2020-05-01'),
+      companyId: companyBD.id,
+    },
+    {
+      firstName: 'Jelena',
+      lastName: 'Jelenić',
+      personalId: '0808991777888', // BD employee 2
+      email: 'jelena.jelenic@tech-services.ba',
+      phone: '+387 66 222 333',
+      baseSalary: 1600,
+      employmentDate: new Date('2021-08-01'),
+      companyId: companyBD.id,
+    },
+  ];
+
+  // Create all employees
+  const allEmployees = [...employeesRS, ...employeesFBIH, ...employeesBD];
+  for (const employee of allEmployees) {
+    await prisma.employee.upsert({
+      where: { personalId: employee.personalId },
+      update: {},
+      create: {
+        ...employee,
+        isActive: true,
+      },
+    });
   }
-  console.log(`  ✅ Created ${employees.length} employees for each company`);
+  console.log(`  ✅ Created ${employeesRS.length} employees for RS company`);
+  console.log(`  ✅ Created ${employeesFBIH.length} employees for FBIH company`);
+  console.log(`  ✅ Created ${employeesBD.length} employees for BD company`);
 
   // ==================== COST CENTERS ====================
   console.log('');
@@ -506,7 +512,7 @@ async function main() {
   console.log(`   ┌─ Companies: 3 (RS, FBIH, BD)`);
   console.log(`   ├─ Chart of Accounts: ${accounts.length} accounts per company`);
   console.log(`   ├─ Partners: ${partners.length} per company (customers, suppliers, both)`);
-  console.log(`   ├─ Employees: ${employees.length} per company`);
+  console.log(`   ├─ Employees: ${allEmployees.length} total (3 RS, 2 FBIH, 2 BD)`);
   console.log(`   └─ Cost Centers: ${costCenters.length} per company`);
   console.log('');
   console.log('✨ All data ready for testing!');
