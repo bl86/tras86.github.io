@@ -11,14 +11,20 @@ import toast from 'react-hot-toast';
 interface Company {
   id: string;
   name: string;
-  taxId: string;
+  taxNumber: string;
+  vatNumber?: string;
   registrationNumber: string;
   legalEntity: string;
-  email: string | null;
-  phone: string | null;
-  address: string | null;
-  city: string | null;
-  country: string | null;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
+  bankName?: string;
+  bankAccount?: string;
+  swift?: string;
+  fiscalYearStart: number;
+  fiscalYearEnd: number;
+  baseCurrency: string;
   isActive: boolean;
 }
 
@@ -28,14 +34,20 @@ export const CompaniesPage = () => {
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    taxId: '',
+    taxNumber: '',
+    vatNumber: '',
     registrationNumber: '',
     legalEntity: 'RS',
-    email: '',
-    phone: '',
     address: '',
     city: '',
-    country: 'BA',
+    postalCode: '',
+    country: 'BiH',
+    bankName: '',
+    bankAccount: '',
+    swift: '',
+    fiscalYearStart: 1,
+    fiscalYearEnd: 12,
+    baseCurrency: 'BAM',
   });
 
   // Fetch companies
@@ -53,7 +65,9 @@ export const CompaniesPage = () => {
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to create company');
+      const message = error.response?.data?.message || error.message || 'Failed to create company';
+      toast.error(message);
+      console.error('Create company error:', error.response?.data);
     },
   });
 
@@ -67,7 +81,9 @@ export const CompaniesPage = () => {
       closeModal();
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to update company');
+      const message = error.response?.data?.message || error.message || 'Failed to update company';
+      toast.error(message);
+      console.error('Update company error:', error.response?.data);
     },
   });
 
@@ -79,7 +95,8 @@ export const CompaniesPage = () => {
       toast.success('Company deleted successfully!');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Failed to delete company');
+      const message = error.response?.data?.message || error.message || 'Failed to delete company';
+      toast.error(message);
     },
   });
 
@@ -87,14 +104,20 @@ export const CompaniesPage = () => {
     setEditingCompany(null);
     setFormData({
       name: '',
-      taxId: '',
+      taxNumber: '',
+      vatNumber: '',
       registrationNumber: '',
       legalEntity: 'RS',
-      email: '',
-      phone: '',
       address: '',
       city: '',
-      country: 'BA',
+      postalCode: '',
+      country: 'BiH',
+      bankName: '',
+      bankAccount: '',
+      swift: '',
+      fiscalYearStart: 1,
+      fiscalYearEnd: 12,
+      baseCurrency: 'BAM',
     });
     setIsModalOpen(true);
   };
@@ -103,14 +126,20 @@ export const CompaniesPage = () => {
     setEditingCompany(company);
     setFormData({
       name: company.name,
-      taxId: company.taxId,
+      taxNumber: company.taxNumber,
+      vatNumber: company.vatNumber || '',
       registrationNumber: company.registrationNumber,
       legalEntity: company.legalEntity,
-      email: company.email || '',
-      phone: company.phone || '',
-      address: company.address || '',
-      city: company.city || '',
-      country: company.country || 'BA',
+      address: company.address,
+      city: company.city,
+      postalCode: company.postalCode,
+      country: company.country,
+      bankName: company.bankName || '',
+      bankAccount: company.bankAccount || '',
+      swift: company.swift || '',
+      fiscalYearStart: company.fiscalYearStart,
+      fiscalYearEnd: company.fiscalYearEnd,
+      baseCurrency: company.baseCurrency,
     });
     setIsModalOpen(true);
   };
@@ -122,10 +151,18 @@ export const CompaniesPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Clean up form data - remove empty optional fields
+    const submitData: any = { ...formData };
+    if (!submitData.vatNumber) delete submitData.vatNumber;
+    if (!submitData.bankName) delete submitData.bankName;
+    if (!submitData.bankAccount) delete submitData.bankAccount;
+    if (!submitData.swift) delete submitData.swift;
+
     if (editingCompany) {
-      updateMutation.mutate({ id: editingCompany.id, data: formData });
+      updateMutation.mutate({ id: editingCompany.id, data: submitData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(submitData);
     }
   };
 
@@ -137,8 +174,8 @@ export const CompaniesPage = () => {
 
   const columns = [
     { header: 'Name', accessor: 'name' as keyof Company },
-    { header: 'Tax ID', accessor: 'taxId' as keyof Company },
-    { header: 'Registration #', accessor: 'registrationNumber' as keyof Company },
+    { header: 'Tax Number (JIB)', accessor: 'taxNumber' as keyof Company },
+    { header: 'City', accessor: 'city' as keyof Company },
     { header: 'Entity', accessor: 'legalEntity' as keyof Company },
     {
       header: 'Status',
@@ -166,7 +203,7 @@ export const CompaniesPage = () => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Companies</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Companies</h1>
         <Button onClick={openCreateModal}>+ Create Company</Button>
       </div>
 
@@ -185,75 +222,184 @@ export const CompaniesPage = () => {
         title={editingCompany ? 'Edit Company' : 'Create Company'}
         size="lg"
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+          {/* Basic Information */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-900 border-b pb-2">Basic Information</h3>
+
             <Input
-              label="Company Name"
+              label="Company Name *"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder="e.g., ABC Trade d.o.o."
             />
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Tax Number (JIB) *"
+                value={formData.taxNumber}
+                onChange={(e) => setFormData({ ...formData, taxNumber: e.target.value })}
+                required
+                placeholder="13 digits"
+                maxLength={13}
+              />
+              <Input
+                label="VAT Number (PDV)"
+                value={formData.vatNumber}
+                onChange={(e) => setFormData({ ...formData, vatNumber: e.target.value })}
+                placeholder="12 digits (optional)"
+                maxLength={12}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Registration Number *"
+                value={formData.registrationNumber}
+                onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
+                required
+                placeholder="Company registration number"
+              />
+              <Select
+                label="Legal Entity *"
+                value={formData.legalEntity}
+                onChange={(e) => setFormData({ ...formData, legalEntity: e.target.value })}
+                options={[
+                  { value: 'RS', label: 'Republika Srpska' },
+                  { value: 'FBIH', label: 'Federacija BiH' },
+                  { value: 'BD', label: 'Brčko Distrikt' },
+                ]}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Address Information */}
+          <div className="space-y-4 pt-4">
+            <h3 className="font-semibold text-gray-900 border-b pb-2">Address Information</h3>
+
             <Input
-              label="Tax ID"
-              value={formData.taxId}
-              onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
+              label="Address *"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               required
+              placeholder="Street and number"
+            />
+
+            <div className="grid grid-cols-3 gap-4">
+              <Input
+                label="City *"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                required
+                placeholder="e.g., Banja Luka"
+              />
+              <Input
+                label="Postal Code *"
+                value={formData.postalCode}
+                onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                required
+                placeholder="e.g., 78000"
+              />
+              <Input
+                label="Country *"
+                value={formData.country}
+                onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                required
+                placeholder="BiH"
+              />
+            </div>
+          </div>
+
+          {/* Banking Information */}
+          <div className="space-y-4 pt-4">
+            <h3 className="font-semibold text-gray-900 border-b pb-2">Banking Information (Optional)</h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label="Bank Name"
+                value={formData.bankName}
+                onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                placeholder="e.g., UniCredit Bank"
+              />
+              <Input
+                label="Bank Account (IBAN)"
+                value={formData.bankAccount}
+                onChange={(e) => setFormData({ ...formData, bankAccount: e.target.value })}
+                placeholder="BA39..."
+              />
+            </div>
+
+            <Input
+              label="SWIFT/BIC Code"
+              value={formData.swift}
+              onChange={(e) => setFormData({ ...formData, swift: e.target.value })}
+              placeholder="e.g., UNCRBA22"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Registration Number"
-              value={formData.registrationNumber}
-              onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
-              required
-            />
-            <Select
-              label="Legal Entity"
-              value={formData.legalEntity}
-              onChange={(e) => setFormData({ ...formData, legalEntity: e.target.value })}
-              options={[
-                { value: 'RS', label: 'Republika Srpska' },
-                { value: 'FBIH', label: 'Federacija BiH' },
-              ]}
-              required
-            />
+          {/* Fiscal Settings */}
+          <div className="space-y-4 pt-4">
+            <h3 className="font-semibold text-gray-900 border-b pb-2">Fiscal Settings</h3>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Select
+                label="Fiscal Year Start *"
+                value={String(formData.fiscalYearStart)}
+                onChange={(e) => setFormData({ ...formData, fiscalYearStart: Number(e.target.value) })}
+                options={[
+                  { value: '1', label: 'January' },
+                  { value: '2', label: 'February' },
+                  { value: '3', label: 'March' },
+                  { value: '4', label: 'April' },
+                  { value: '5', label: 'May' },
+                  { value: '6', label: 'June' },
+                  { value: '7', label: 'July' },
+                  { value: '8', label: 'August' },
+                  { value: '9', label: 'September' },
+                  { value: '10', label: 'October' },
+                  { value: '11', label: 'November' },
+                  { value: '12', label: 'December' },
+                ]}
+                required
+              />
+              <Select
+                label="Fiscal Year End *"
+                value={String(formData.fiscalYearEnd)}
+                onChange={(e) => setFormData({ ...formData, fiscalYearEnd: Number(e.target.value) })}
+                options={[
+                  { value: '1', label: 'January' },
+                  { value: '2', label: 'February' },
+                  { value: '3', label: 'March' },
+                  { value: '4', label: 'April' },
+                  { value: '5', label: 'May' },
+                  { value: '6', label: 'June' },
+                  { value: '7', label: 'July' },
+                  { value: '8', label: 'August' },
+                  { value: '9', label: 'September' },
+                  { value: '10', label: 'October' },
+                  { value: '11', label: 'November' },
+                  { value: '12', label: 'December' },
+                ]}
+                required
+              />
+              <Select
+                label="Base Currency *"
+                value={formData.baseCurrency}
+                onChange={(e) => setFormData({ ...formData, baseCurrency: e.target.value })}
+                options={[
+                  { value: 'BAM', label: 'BAM - Konvertibilna Marka' },
+                  { value: 'EUR', label: 'EUR - Euro' },
+                  { value: 'USD', label: 'USD - US Dollar' },
+                  { value: 'CHF', label: 'CHF - Swiss Franc' },
+                ]}
+                required
+              />
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            />
-            <Input
-              label="Phone"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            />
-          </div>
-
-          <Input
-            label="Address"
-            value={formData.address}
-            onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-          />
-
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="City"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            />
-            <Input
-              label="Country"
-              value={formData.country}
-              onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex justify-end gap-2 pt-6 border-t sticky bottom-0 bg-white">
             <Button type="button" variant="secondary" onClick={closeModal}>
               Cancel
             </Button>
