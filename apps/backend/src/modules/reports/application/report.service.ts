@@ -69,7 +69,7 @@ export class ReportService {
       } else if (line.account.type === 'LIABILITY' || line.account.type === 'EQUITY') {
         acc.balance = new Decimal(acc.balance).plus(credit).minus(debit).toNumber();
       }
-    });
+    }
 
     // Group by type
     const assets = Array.from(accountBalances.values()).filter(
@@ -150,7 +150,7 @@ export class ReportService {
       } else if (line.account.type === 'EXPENSE') {
         acc.balance = new Decimal(acc.balance).plus(debit).minus(credit).toNumber();
       }
-    });
+    }
 
     // Group by type
     const revenues = Array.from(accountBalances.values()).filter(
@@ -196,7 +196,7 @@ export class ReportService {
       },
     });
 
-    const cashAccountIds = cashAccounts.map((a) => a.id);
+    const cashAccountIds = cashAccounts.map((a: any) => a.id);
 
     // Get opening balance (before start date)
     const openingLines = await prisma.journalEntryLine.findMany({
@@ -294,7 +294,7 @@ export class ReportService {
       financingCashFlow,
       netCashFlow,
       closingBalance,
-      cashAccounts: cashAccounts.map((a) => ({
+      cashAccounts: cashAccounts.map((a: any) => ({
         code: a.code,
         name: a.name,
       })),
