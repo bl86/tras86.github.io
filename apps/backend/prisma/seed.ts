@@ -192,11 +192,11 @@ async function main() {
     { code: '210200', name: 'Obaveze po osnovu lizinga', type: 'LIABILITY', category: 'LONG_TERM_LIABILITIES' },
 
     // KAPITAL - Equity
-    { code: '220000', name: 'KAPITAL', type: 'EQUITY', category: 'EQUITY' },
-    { code: '221000', name: 'Osnovni kapital', type: 'EQUITY', category: 'EQUITY' },
-    { code: '222000', name: 'Rezerve', type: 'EQUITY', category: 'EQUITY' },
-    { code: '223000', name: 'Neraspoređena dobit', type: 'EQUITY', category: 'EQUITY' },
-    { code: '224000', name: 'Dobit tekuće godine', type: 'EQUITY', category: 'EQUITY' },
+    { code: '220000', name: 'KAPITAL', type: 'LIABILITY', category: 'EQUITY' },
+    { code: '221000', name: 'Osnovni kapital', type: 'LIABILITY', category: 'EQUITY' },
+    { code: '222000', name: 'Rezerve', type: 'LIABILITY', category: 'EQUITY' },
+    { code: '223000', name: 'Neraspoređena dobit', type: 'LIABILITY', category: 'EQUITY' },
+    { code: '224000', name: 'Dobit tekuće godine', type: 'LIABILITY', category: 'EQUITY' },
 
     // PRIHODI - Revenue
     { code: '300000', name: 'PRIHODI', type: 'REVENUE', category: 'OPERATING_REVENUE' },
