@@ -50,3 +50,4 @@ apps/backend/prisma/migrations/
 # Misc
 *.tsbuildinfo
 .cache
+package-lock.json

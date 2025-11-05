@@ -21,7 +21,7 @@ declare global {
  */
 export const authenticate = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
   try {
@@ -51,7 +51,7 @@ export const authenticate = (
  */
 export const authenticateOptional = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): void => {
   try {
