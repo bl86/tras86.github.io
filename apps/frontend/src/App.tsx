@@ -158,22 +158,67 @@ const DashboardPage = () => {
 
 // Company Wrapper Component
 const CompanyWrapper = ({ children }: { children: (companyId: string) => React.ReactNode }) => {
-  const { data: companies = [], isLoading } = useQuery({
+  const { data: companies = [], isLoading, error, isError } = useQuery({
     queryKey: ['companies'],
-    queryFn: () => apiClient.getCompanies(),
+    queryFn: async () => {
+      const result = await apiClient.getCompanies();
+      console.log('🏢 Companies loaded:', result);
+      // Ensure we return an array
+      if (!Array.isArray(result)) {
+        console.error('❌ Companies response is not an array:', result);
+        return [];
+      }
+      return result;
+    },
+    retry: 1,
   });
 
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
 
   if (isLoading) {
-    return <div className="p-6">Loading companies...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading companies...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (companies.length === 0) {
+  if (isError) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-semibold mb-2">Error loading companies</h3>
+          <p className="text-red-700 text-sm mb-4">
+            {error instanceof Error ? error.message : 'Unknown error occurred'}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!Array.isArray(companies) || companies.length === 0) {
     return (
       <div className="p-6">
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <p className="text-yellow-800">No companies found. Please create a company first.</p>
+          <h3 className="text-yellow-800 font-semibold mb-2">No companies found</h3>
+          <p className="text-yellow-700 text-sm mb-4">
+            Please create a company first to continue.
+          </p>
+          <button
+            onClick={() => window.location.href = '/companies'}
+            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+          >
+            Go to Companies
+          </button>
         </div>
       </div>
     );
@@ -184,12 +229,12 @@ const CompanyWrapper = ({ children }: { children: (companyId: string) => React.R
 
   return (
     <div>
-      <div className="bg-white border-b p-4">
-        <label className="block text-sm font-medium mb-2">Select Company:</label>
+      <div className="bg-white border-b p-4 shadow-sm">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Select Company:</label>
         <select
           value={companyId}
           onChange={(e) => setSelectedCompanyId(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-md text-gray-900 bg-white"
         >
           {companies.map((company: any) => (
             <option key={company.id} value={company.id}>
