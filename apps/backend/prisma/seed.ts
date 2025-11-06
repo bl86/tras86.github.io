@@ -657,6 +657,147 @@ async function main() {
   }
   console.log(`  ✅ Created ${costCenters.length} cost centers for all ${companies.length} companies`);
 
+  // ==================== PAYROLL RUNS ====================
+  console.log('');
+  console.log('💰 Creating payroll runs...');
+
+  let totalPayrollRuns = 0;
+  for (const company of companies.slice(0, 3)) { // Only RS, FBIH, BD have employees
+    const entity = company.legalEntity as any;
+
+    // Create payroll for previous 3 months
+    const months = ['2025-01', '2025-02', '2025-03'];
+    for (const month of months) {
+      try {
+        await prisma.payrollRun.create({
+          data: {
+            period: month,
+            entity,
+            status: 'APPROVED',
+            totalGross: entity === 'RS' ? 6700 : entity === 'FBIH' ? 4100 : 3800,
+            totalNet: entity === 'RS' ? 4800 : entity === 'FBIH' ? 2950 : 2730,
+            totalTax: entity === 'RS' ? 670 : entity === 'FBIH' ? 410 : 380,
+            totalSocialContributions: entity === 'RS' ? 3100 : entity === 'FBIH' ? 1900 : 1760,
+            companyId: company.id,
+            calculatedById: superAdmin.id,
+            approvedById: superAdmin.id,
+            approvedAt: new Date(`${month}-15`),
+          },
+        });
+        totalPayrollRuns++;
+      } catch (e) {
+        // Skip if already exists
+      }
+    }
+  }
+  console.log(`  ✅ Created ${totalPayrollRuns} payroll runs for companies with employees`);
+
+  // ==================== JOURNAL ENTRIES ====================
+  console.log('');
+  console.log('📖 Creating hundreds of journal entries...');
+
+  let totalJournalEntries = 0;
+
+  // Get some accounts for each company to use in journal entries
+  for (const company of companies) {
+    const companyAccounts = await prisma.account.findMany({
+      where: { companyId: company.id },
+      take: 20,
+    });
+
+    if (companyAccounts.length === 0) continue;
+
+    const cashAccount = companyAccounts.find(a => a.code === '101100') || companyAccounts[0];
+    const bankAccount = companyAccounts.find(a => a.code === '101200') || companyAccounts[1];
+    const receivablesAccount = companyAccounts.find(a => a.code === '103100') || companyAccounts[2];
+    const revenueAccount = companyAccounts.find(a => a.code === '301000') || companyAccounts[3];
+    const expenseAccount = companyAccounts.find(a => a.code === '401000') || companyAccounts[4];
+    const payablesAccount = companyAccounts.find(a => a.code === '201100') || companyAccounts[5];
+    const salaryAccount = companyAccounts.find(a => a.code === '402000') || companyAccounts[6];
+    const taxAccount = companyAccounts.find(a => a.code === '201300') || companyAccounts[7];
+
+    // Create 30 journal entries per company (300 total for 10 companies)
+    for (let i = 1; i <= 30; i++) {
+      const dayOffset = (i - 1) * 3; // Spread entries across 90 days
+      const entryDate = new Date('2025-01-01');
+      entryDate.setDate(entryDate.getDate() + dayOffset);
+
+      const month = entryDate.getMonth();
+      const fiscalPeriods = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL'];
+      const fiscalPeriod = fiscalPeriods[month] as any;
+
+      const entryTypes = [
+        // Type 1: Sales revenue
+        {
+          description: `Faktura prodaje ${1000 + i}`,
+          documentType: 'INVOICE',
+          lines: [
+            { accountId: receivablesAccount.id, debit: 10000 + (i * 100), credit: 0, description: 'Potraživanje od kupca' },
+            { accountId: revenueAccount.id, debit: 0, credit: 10000 + (i * 100), description: 'Prihod od prodaje' },
+          ],
+        },
+        // Type 2: Purchase expense
+        {
+          description: `Faktura nabavke ${2000 + i}`,
+          documentType: 'INVOICE',
+          lines: [
+            { accountId: expenseAccount.id, debit: 5000 + (i * 50), credit: 0, description: 'Troškovi materijala' },
+            { accountId: payablesAccount.id, debit: 0, credit: 5000 + (i * 50), description: 'Obaveza prema dobavljaču' },
+          ],
+        },
+        // Type 3: Bank payment
+        {
+          description: `Prenos sa banke u blagajnu ${i}`,
+          documentType: 'PAYMENT',
+          lines: [
+            { accountId: cashAccount.id, debit: 3000, credit: 0, description: 'Uplata u blagajnu' },
+            { accountId: bankAccount.id, debit: 0, credit: 3000, description: 'Isplata sa banke' },
+          ],
+        },
+        // Type 4: Salary payment
+        {
+          description: `Isplata plata ${entryDate.toISOString().slice(0, 7)}`,
+          documentType: 'PAYROLL',
+          lines: [
+            { accountId: salaryAccount.id, debit: 8000, credit: 0, description: 'Obračun plata' },
+            { accountId: taxAccount.id, debit: 2000, credit: 0, description: 'Porezi i doprinosi' },
+            { accountId: bankAccount.id, debit: 0, credit: 10000, description: 'Isplata plata' },
+          ],
+        },
+      ];
+
+      const entryType = entryTypes[i % entryTypes.length];
+
+      try {
+        await prisma.journalEntry.create({
+          data: {
+            entryNumber: `JE-2025-${String(i).padStart(4, '0')}`,
+            entryDate,
+            postingDate: entryDate,
+            description: entryType.description,
+            documentNumber: `DOC-${i}`,
+            documentType: entryType.documentType as any,
+            status: i % 3 === 0 ? 'DRAFT' : 'POSTED',
+            fiscalYear: 2025,
+            fiscalPeriod,
+            companyId: company.id,
+            createdById: superAdmin.id,
+            lines: {
+              create: entryType.lines.map((line, idx) => ({
+                ...line,
+                lineNumber: idx + 1,
+              })),
+            },
+          },
+        });
+        totalJournalEntries++;
+      } catch (e) {
+        // Skip if entry number already exists
+      }
+    }
+  }
+  console.log(`  ✅ Created ${totalJournalEntries} journal entries across all companies`);
+
   // ==================== SUMMARY ====================
   console.log('');
   console.log('═══════════════════════════════════════════════');
@@ -672,7 +813,9 @@ async function main() {
   console.log(`   ├─ Chart of Accounts: ${accounts.length} accounts per company (${accounts.length * companies.length} total)`);
   console.log(`   ├─ Partners: ${partners.length} per company (${partners.length * companies.length} total)`);
   console.log(`   ├─ Employees: ${allEmployees.length} total (3 RS, 2 FBIH, 2 BD)`);
-  console.log(`   └─ Cost Centers: ${costCenters.length} per company (${costCenters.length * companies.length} total)`);
+  console.log(`   ├─ Cost Centers: ${costCenters.length} per company (${costCenters.length * companies.length} total)`);
+  console.log(`   ├─ Payroll Runs: ${totalPayrollRuns} (3 months for 3 companies with employees)`);
+  console.log(`   └─ Journal Entries: ${totalJournalEntries} (balanced double-entry transactions)`);
   console.log('');
   console.log('✨ All data ready for testing!');
   console.log('');

@@ -24,7 +24,10 @@ export class ReportController {
         endDate: new Date(endDate as string),
       });
 
-      res.json(report);
+      res.status(200).json({
+        status: 'success',
+        data: { report },
+      });
     } catch (error) {
       next(error);
     }
@@ -45,7 +48,10 @@ export class ReportController {
         endDate: new Date(endDate as string),
       });
 
-      res.json(report);
+      res.status(200).json({
+        status: 'success',
+        data: { report },
+      });
     } catch (error) {
       next(error);
     }
@@ -66,7 +72,10 @@ export class ReportController {
         endDate: new Date(endDate as string),
       });
 
-      res.json(report);
+      res.status(200).json({
+        status: 'success',
+        data: { report },
+      });
     } catch (error) {
       next(error);
     }
@@ -87,7 +96,10 @@ export class ReportController {
         endDate: new Date(endDate as string),
       });
 
-      res.json(reports);
+      res.status(200).json({
+        status: 'success',
+        data: { reports },
+      });
     } catch (error) {
       next(error);
     }

@@ -193,32 +193,32 @@ class ApiClient {
   // Journal Entries
   async getJournalEntries(companyId: string, params?: any) {
     const response = await this.client.get(`/companies/${companyId}/journal-entries`, { params });
-    return response.data;
+    return response.data; // Returns { entries, pagination }
   }
 
   async getJournalEntry(companyId: string, entryId: string) {
     const response = await this.client.get(`/companies/${companyId}/journal-entries/${entryId}`);
-    return response.data;
+    return response.data.entry;
   }
 
   async createJournalEntry(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/journal-entries`, data);
-    return response.data;
+    return response.data.entry;
   }
 
   async updateJournalEntry(companyId: string, entryId: string, data: any) {
     const response = await this.client.put(`/companies/${companyId}/journal-entries/${entryId}`, data);
-    return response.data;
+    return response.data.entry;
   }
 
   async postJournalEntry(companyId: string, entryId: string) {
     const response = await this.client.post(`/companies/${companyId}/journal-entries/${entryId}/post`);
-    return response.data;
+    return response.data.entry;
   }
 
-  async reverseJournalEntry(companyId: string, entryId: string) {
-    const response = await this.client.post(`/companies/${companyId}/journal-entries/${entryId}/reverse`);
-    return response.data;
+  async reverseJournalEntry(companyId: string, entryId: string, reversalDate: string) {
+    const response = await this.client.post(`/companies/${companyId}/journal-entries/${entryId}/reverse`, { reversalDate });
+    return response.data.entry;
   }
 
   async deleteJournalEntry(companyId: string, entryId: string) {
@@ -229,17 +229,22 @@ class ApiClient {
   // Payroll
   async getPayrollRuns(companyId: string) {
     const response = await this.client.get(`/companies/${companyId}/payroll`);
-    return response.data;
+    return response.data.payrollRuns || [];
+  }
+
+  async getPayrollRun(companyId: string, payrollId: string) {
+    const response = await this.client.get(`/companies/${companyId}/payroll/${payrollId}`);
+    return response.data.payrollRun;
   }
 
   async createPayrollRun(companyId: string, data: any) {
     const response = await this.client.post(`/companies/${companyId}/payroll`, data);
-    return response.data;
+    return response.data.payrollRun;
   }
 
   async approvePayrollRun(companyId: string, payrollId: string) {
     const response = await this.client.post(`/companies/${companyId}/payroll/${payrollId}/approve`);
-    return response.data;
+    return response.data.payrollRun;
   }
 
   async deletePayrollRun(companyId: string, payrollId: string) {
@@ -252,28 +257,28 @@ class ApiClient {
     const response = await this.client.get(`/companies/${companyId}/reports/balance-sheet`, {
       params: { endDate },
     });
-    return response.data;
+    return response.data.report;
   }
 
   async generateProfitAndLoss(companyId: string, startDate: string, endDate: string) {
     const response = await this.client.get(`/companies/${companyId}/reports/profit-and-loss`, {
       params: { startDate, endDate },
     });
-    return response.data;
+    return response.data.report;
   }
 
   async generateCashFlow(companyId: string, startDate: string, endDate: string) {
     const response = await this.client.get(`/companies/${companyId}/reports/cash-flow`, {
       params: { startDate, endDate },
     });
-    return response.data;
+    return response.data.report;
   }
 
   async generateAllReports(companyId: string, startDate: string, endDate: string) {
     const response = await this.client.get(`/companies/${companyId}/reports/all`, {
       params: { startDate, endDate },
     });
-    return response.data;
+    return response.data.reports;
   }
 }
 
