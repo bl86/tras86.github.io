@@ -3,7 +3,7 @@
  * Token generation and verification
  */
 
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { config } from '@/config/config';
 import { User } from '@prisma/client';
 
@@ -23,9 +23,11 @@ export const generateAccessToken = (user: User): string => {
     role: user.role,
   };
 
-  return jwt.sign(payload, config.jwt.secret, {
-    expiresIn: config.jwt.expiresIn,
-  });
+  const options: SignOptions = {
+    expiresIn: config.jwt.expiresIn as any,
+  };
+
+  return jwt.sign(payload, config.jwt.secret, options);
 };
 
 /**
@@ -38,9 +40,11 @@ export const generateRefreshToken = (user: User): string => {
     role: user.role,
   };
 
-  return jwt.sign(payload, config.jwt.refreshSecret, {
-    expiresIn: config.jwt.refreshExpiresIn,
-  });
+  const options: SignOptions = {
+    expiresIn: config.jwt.refreshExpiresIn as any,
+  };
+
+  return jwt.sign(payload, config.jwt.refreshSecret, options);
 };
 
 /**

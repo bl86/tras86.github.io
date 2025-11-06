@@ -197,6 +197,7 @@ export class GeneralLedgerService {
       description: string | null;
       costCenterId: string | null;
       partnerId: string | null;
+      analyticalAccount: string | null;
     }) => ({
       accountId: line.accountId,
       debit: parseFloat(line.credit.toString()),
