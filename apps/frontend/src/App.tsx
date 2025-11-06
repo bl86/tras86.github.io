@@ -11,6 +11,7 @@ import { EmployeesPage } from '@/pages/employees/EmployeesPage';
 import { CostCentersPage } from '@/pages/cost-centers/CostCentersPage';
 import { JournalEntriesPage } from '@/pages/journal-entries/JournalEntriesPage';
 import { PayrollPage } from '@/pages/payroll/PayrollPage';
+import PayrollCalculatorPage from '@/pages/payroll/PayrollCalculatorPage';
 import { ReportsPage } from '@/pages/reports/ReportsPage';
 import { TestPage } from '@/pages/TestPage';
 
@@ -281,6 +282,7 @@ function App() {
         <Route path="/cost-centers" element={<CompanyWrapper>{(companyId) => <CostCentersPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/journal-entries" element={<CompanyWrapper>{(companyId) => <JournalEntriesPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/payroll" element={<CompanyWrapper>{(companyId) => <PayrollPage companyId={companyId} />}</CompanyWrapper>} />
+        <Route path="/payroll-calculator" element={<PayrollCalculatorPage />} />
         <Route path="/reports" element={<CompanyWrapper>{(companyId) => <ReportsPage companyId={companyId} />}</CompanyWrapper>} />
         <Route path="/test" element={<TestPage />} />
         <Route path="/" element={<Navigate to="/dashboard" />} />
