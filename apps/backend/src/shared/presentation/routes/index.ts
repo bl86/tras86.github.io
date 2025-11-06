@@ -11,7 +11,7 @@ import { partnerRouter } from '@/modules/partners/presentation/routes';
 import { employeeRouter } from '@/modules/employees/presentation/routes';
 import { costCenterRouter } from '@/modules/cost-centers/presentation/routes';
 import { reportRouter } from '@/modules/reports/presentation/routes';
-import { payrollRouter } from '@/modules/payroll/presentation/routes';
+import { payrollRouter, payrollCalculationRouter } from '@/modules/payroll/presentation/routes';
 import { generalLedgerRouter } from '@/modules/general-ledger/presentation/routes';
 
 export const router = Router();
@@ -41,6 +41,9 @@ v1Router.use('/companies', costCenterRouter);
 
 // Payroll routes (nested under companies)
 v1Router.use('/companies', payrollRouter);
+
+// Payroll calculation routes (independent, for testing)
+v1Router.use('/payroll', payrollCalculationRouter);
 
 // General Ledger routes (nested under companies)
 v1Router.use('/companies', generalLedgerRouter);

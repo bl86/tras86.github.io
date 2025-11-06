@@ -1,139 +1,44 @@
 /**
  * Payroll Service
- * Calculates payroll for RS and FBiH
+ * Manages payroll runs and calculations for BiH entities
+ * Uses PayrollCalculationService for accurate 2025 tax calculations
  */
 
 import { prisma } from '@/shared/infrastructure/database/prisma';
 import { NotFoundError, BadRequestError } from '@/shared/domain/errors/app-error';
 import { LegalEntity, PayrollStatus } from '@prisma/client';
-import { Decimal } from 'decimal.js';
-
-// Tax rates for Republika Srpska (2025)
-const RS_TAX_RATES = {
-  INCOME_TAX: 0.10,           // 10% porez na dohodak
-  PIO_EMPLOYEE: 0.185,        // 18.5% PIO zaposleni
-  PIO_EMPLOYER: 0.105,        // 10.5% PIO poslodavac
-  HEALTH_EMPLOYEE: 0.125,     // 12.5% zdravstveno zaposleni
-  HEALTH_EMPLOYER: 0.105,     // 10.5% zdravstveno poslodavac
-  UNEMPLOYMENT: 0.01,         // 1% nezaposlenost (samo poslodavac)
-};
-
-// Tax rates for Federacija BiH (2025)
-const FBIH_TAX_RATES = {
-  INCOME_TAX: 0.10,                  // 10% porez na dohodak
-  PIO_EMPLOYEE: 0.17,                // 17% PIO zaposleni
-  PIO_EMPLOYER: 0.06,                // 6% PIO poslodavac
-  HEALTH_EMPLOYEE: 0.125,            // 12.5% zdravstveno zaposleni
-  HEALTH_EMPLOYER: 0.105,            // 10.5% zdravstveno poslodavac
-  UNEMPLOYMENT_EMPLOYEE: 0.015,      // 1.5% nezaposlenost zaposleni
-  UNEMPLOYMENT_EMPLOYER: 0.005,      // 0.5% nezaposlenost poslodavac
-};
-
-interface PayrollCalculation {
-  grossSalary: number;
-  incomeTax: number;
-  pioEmployee: number;
-  healthEmployee: number;
-  unemploymentEmployee: number;
-  totalDeductions: number;
-  netSalary: number;
-  pioEmployer: number;
-  healthEmployer: number;
-  unemploymentEmployer: number;
-  totalEmployerCost: number;
-}
-
-interface EmployeePayroll extends PayrollCalculation {
-  employeeId: string;
-  deductions: unknown;
-  additions: unknown;
-}
+import { payrollCalculationService } from '../domain/payroll-calculation.service';
+import Decimal from 'decimal.js';
 
 export class PayrollService {
   /**
-   * Calculate payroll for RS employee
+   * Calculate individual employee payroll
    */
-  private calculateRSPayroll(grossSalary: number) {
-    const gross = new Decimal(grossSalary);
-
-    // Employee contributions
-    const pioEmployee = gross.times(RS_TAX_RATES.PIO_EMPLOYEE);
-    const healthEmployee = gross.times(RS_TAX_RATES.HEALTH_EMPLOYEE);
-    const unemploymentEmployee = new Decimal(0);
-
-    const totalEmployeeContributions = pioEmployee.plus(healthEmployee);
-
-    // Taxable base
-    const taxableBase = gross.minus(totalEmployeeContributions);
-
-    // Income tax
-    const incomeTax = taxableBase.times(RS_TAX_RATES.INCOME_TAX);
-
-    // Net salary
-    const netSalary = taxableBase.minus(incomeTax);
-
-    // Employer contributions
-    const pioEmployer = gross.times(RS_TAX_RATES.PIO_EMPLOYER);
-    const healthEmployer = gross.times(RS_TAX_RATES.HEALTH_EMPLOYER);
-    const unemploymentEmployer = gross.times(RS_TAX_RATES.UNEMPLOYMENT);
+  calculateEmployeePayroll(
+    employeeGrossSalary: number | Decimal,
+    entity: LegalEntity
+  ) {
+    const calculation = payrollCalculationService.calculateFromGross(
+      entity,
+      employeeGrossSalary
+    );
 
     return {
-      grossSalary: gross.toNumber(),
-      netSalary: netSalary.toNumber(),
-      taxableBase: taxableBase.toNumber(),
-      incomeTax: incomeTax.toNumber(),
-      pioEmployee: pioEmployee.toNumber(),
-      healthEmployee: healthEmployee.toNumber(),
-      unemploymentEmployee: unemploymentEmployee.toNumber(),
-      pioEmployer: pioEmployer.toNumber(),
-      healthEmployer: healthEmployer.toNumber(),
-      unemploymentEmployer: unemploymentEmployer.toNumber(),
+      grossSalary: calculation.grossSalary.toNumber(),
+      netSalary: calculation.netSalary.toNumber(),
+      incomeTax: calculation.incomeTax.toNumber(),
+      pioEmployee: calculation.piEmployee.toNumber(),
+      healthEmployee: calculation.healthEmployee.toNumber(),
+      unemploymentEmployee: calculation.unemploymentEmployee.toNumber(),
+      pioEmployer: calculation.piEmployer.toNumber(),
+      healthEmployer: calculation.healthEmployer.toNumber(),
+      unemploymentEmployer: calculation.unemploymentEmployer.toNumber(),
+      totalCost: calculation.totalCost.toNumber(),
     };
   }
 
   /**
-   * Calculate payroll for FBiH employee
-   */
-  private calculateFBIHPayroll(grossSalary: number) {
-    const gross = new Decimal(grossSalary);
-
-    // Employee contributions
-    const pioEmployee = gross.times(FBIH_TAX_RATES.PIO_EMPLOYEE);
-    const healthEmployee = gross.times(FBIH_TAX_RATES.HEALTH_EMPLOYEE);
-    const unemploymentEmployee = gross.times(FBIH_TAX_RATES.UNEMPLOYMENT_EMPLOYEE);
-
-    const totalEmployeeContributions = pioEmployee.plus(healthEmployee).plus(unemploymentEmployee);
-
-    // Taxable base
-    const taxableBase = gross.minus(totalEmployeeContributions);
-
-    // Income tax
-    const incomeTax = taxableBase.times(FBIH_TAX_RATES.INCOME_TAX);
-
-    // Net salary
-    const netSalary = taxableBase.minus(incomeTax);
-
-    // Employer contributions
-    const pioEmployer = gross.times(FBIH_TAX_RATES.PIO_EMPLOYER);
-    const healthEmployer = gross.times(FBIH_TAX_RATES.HEALTH_EMPLOYER);
-    const unemploymentEmployer = gross.times(FBIH_TAX_RATES.UNEMPLOYMENT_EMPLOYER);
-
-    return {
-      grossSalary: gross.toNumber(),
-      netSalary: netSalary.toNumber(),
-      taxableBase: taxableBase.toNumber(),
-      incomeTax: incomeTax.toNumber(),
-      pioEmployee: pioEmployee.toNumber(),
-      healthEmployee: healthEmployee.toNumber(),
-      unemploymentEmployee: unemploymentEmployee.toNumber(),
-      pioEmployer: pioEmployer.toNumber(),
-      healthEmployer: healthEmployer.toNumber(),
-      unemploymentEmployer: unemploymentEmployer.toNumber(),
-    };
-  }
-
-  /**
-   * Create payroll run
+   * Create payroll run for a company
    */
   async createPayrollRun(
     companyId: string,
@@ -143,46 +48,69 @@ export class PayrollService {
   ) {
     // Check if payroll for this period already exists
     const existing = await prisma.payrollRun.findFirst({
-      where: { companyId, period },
+      where: { companyId, period, entity },
     });
 
     if (existing) {
-      throw new BadRequestError(`Payroll for period ${period} already exists`);
+      throw new BadRequestError(
+        `Payroll for period ${period} and entity ${entity} already exists`
+      );
     }
 
-    // Get all active employees
+    // Get all active employees for this entity
     const employees = await prisma.employee.findMany({
-      where: { companyId, isActive: true },
+      where: {
+        companyId,
+        entity,
+        isActive: true,
+      },
     });
 
     if (employees.length === 0) {
-      throw new BadRequestError('No active employees found');
+      throw new BadRequestError(
+        `No active employees found for entity ${entity}`
+      );
     }
 
     // Calculate payroll for each employee
-    const employeePayrolls = employees.map((employee: {
-      id: string;
-      baseSalary: { toString: () => string };
-    }) => {
-      const calculation =
-        entity === LegalEntity.RS
-          ? this.calculateRSPayroll(parseFloat(employee.baseSalary.toString()))
-          : this.calculateFBIHPayroll(parseFloat(employee.baseSalary.toString()));
+    const employeePayrolls = employees.map((employee: any) => {
+      const grossSalary = parseFloat(employee.grossSalary.toString());
+      const calculation = this.calculateEmployeePayroll(grossSalary, entity);
 
       return {
         employeeId: employee.id,
-        ...calculation,
+        grossSalary: calculation.grossSalary,
+        netSalary: calculation.netSalary,
+        incomeTax: calculation.incomeTax,
+        pioEmployee: calculation.pioEmployee,
+        healthEmployee: calculation.healthEmployee,
+        unemploymentEmployee: calculation.unemploymentEmployee,
+        pioEmployer: calculation.pioEmployer,
+        healthEmployer: calculation.healthEmployer,
+        unemploymentEmployer: calculation.unemploymentEmployer,
+        totalDeductions:
+          calculation.pioEmployee +
+          calculation.healthEmployee +
+          calculation.unemploymentEmployee +
+          calculation.incomeTax,
+        totalEmployerCost:
+          calculation.pioEmployer +
+          calculation.healthEmployer +
+          calculation.unemploymentEmployer,
         deductions: null,
         additions: null,
       };
     });
 
     // Calculate totals
-    const totalGross = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.grossSalary, 0);
-    const totalNet = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.netSalary, 0);
-    const totalTax = employeePayrolls.reduce((sum: number, p: EmployeePayroll) => sum + p.incomeTax, 0);
+    const totalGross = employeePayrolls.reduce(
+      (sum: number, p: any) => sum + p.grossSalary,
+      0
+    );
+    const totalNet = employeePayrolls.reduce((sum: number, p: any) => sum + p.netSalary, 0);
+    const totalTax = employeePayrolls.reduce((sum: number, p: any) => sum + p.incomeTax, 0);
     const totalSocialContributions = employeePayrolls.reduce(
-      (sum: number, p: EmployeePayroll) =>
+      (sum: number, p: any) =>
         sum +
         p.pioEmployee +
         p.healthEmployee +
@@ -193,7 +121,7 @@ export class PayrollService {
       0
     );
 
-    // Create payroll run
+    // Create payroll run with employee details
     const payrollRun = await prisma.payrollRun.create({
       data: {
         period,
@@ -215,6 +143,12 @@ export class PayrollService {
             employee: true,
           },
         },
+        calculatedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     });
 
@@ -222,7 +156,7 @@ export class PayrollService {
   }
 
   /**
-   * Get payroll run
+   * Get payroll run by ID
    */
   async getPayrollRun(payrollRunId: string, companyId: string) {
     const payrollRun = await prisma.payrollRun.findFirst({
@@ -256,9 +190,37 @@ export class PayrollService {
   }
 
   /**
+   * Get all payroll runs for a company
+   */
+  async getPayrollRuns(companyId: string) {
+    return prisma.payrollRun.findMany({
+      where: { companyId },
+      include: {
+        calculatedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+        approvedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { period: 'desc' },
+    });
+  }
+
+  /**
    * Approve payroll run
    */
-  async approvePayrollRun(payrollRunId: string, companyId: string, userId: string) {
+  async approvePayrollRun(
+    payrollRunId: string,
+    companyId: string,
+    userId: string
+  ) {
     const payrollRun = await this.getPayrollRun(payrollRunId, companyId);
 
     if (payrollRun.status !== PayrollStatus.CALCULATED) {
@@ -272,24 +234,77 @@ export class PayrollService {
         approvedById: userId,
         approvedAt: new Date(),
       },
-    });
-  }
-
-  /**
-   * Get payroll runs for company
-   */
-  async getPayrollRuns(companyId: string) {
-    return prisma.payrollRun.findMany({
-      where: { companyId },
       include: {
+        employees: {
+          include: {
+            employee: true,
+          },
+        },
         calculatedBy: {
           select: {
             firstName: true,
             lastName: true,
           },
         },
+        approvedBy: {
+          select: {
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
-      orderBy: { period: 'desc' },
     });
+  }
+
+  /**
+   * Calculate payroll preview (without saving)
+   */
+  async calculatePayrollPreview(companyId: string, entity: LegalEntity) {
+    const employees = await prisma.employee.findMany({
+      where: {
+        companyId,
+        entity,
+        isActive: true,
+      },
+    });
+
+    if (employees.length === 0) {
+      throw new BadRequestError(
+        `No active employees found for entity ${entity}`
+      );
+    }
+
+    const calculations = employees.map((employee: any) => {
+      const grossSalary = parseFloat(employee.grossSalary.toString());
+      const calculation = this.calculateEmployeePayroll(grossSalary, entity);
+
+      return {
+        employee: {
+          id: employee.id,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          personalNumber: employee.personalNumber,
+          position: employee.position,
+        },
+        ...calculation,
+      };
+    });
+
+    const totalGross = calculations.reduce((sum: number, c: any) => sum + c.grossSalary, 0);
+    const totalNet = calculations.reduce((sum: number, c: any) => sum + c.netSalary, 0);
+    const totalTax = calculations.reduce((sum: number, c: any) => sum + c.incomeTax, 0);
+    const totalCost = calculations.reduce((sum: number, c: any) => sum + c.totalCost, 0);
+
+    return {
+      entity,
+      employeeCount: employees.length,
+      employees: calculations,
+      totals: {
+        totalGross,
+        totalNet,
+        totalTax,
+        totalCost,
+      },
+    };
   }
 }

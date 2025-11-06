@@ -526,83 +526,151 @@ async function main() {
 
   // ==================== EMPLOYEES ====================
   console.log('');
-  console.log('👤 Creating employees...');
+  console.log('👤 Creating employees with detailed payroll data...');
 
-  // Create separate employees for each company (personalId must be globally unique)
+  // Republika Srpska Employees (3 employees with varying salaries)
   const employeesRS = [
     {
+      personalNumber: 'RS-001',
       firstName: 'Petar',
       lastName: 'Petrović',
-      personalId: '0101990123456', // RS employee 1
+      jmbg: '0101990123456',
+      taxNumber: 'RS-TAX-001',
+      address: 'Trg srpskih vladara 1',
+      city: 'Banja Luka',
       email: 'petar.petrovic@abc-trade.ba',
       phone: '+387 65 111 222',
-      baseSalary: 2500,
+      entity: 'RS' as any,
+      position: 'Direktor',
+      department: 'Uprava',
+      grossSalary: 3500, // Higher salary for manager
       employmentDate: new Date('2020-01-01'),
       companyId: companyRS.id,
     },
     {
+      personalNumber: 'RS-002',
       firstName: 'Milica',
       lastName: 'Milić',
-      personalId: '1505985654321', // RS employee 2
+      jmbg: '1505985654321',
+      taxNumber: 'RS-TAX-002',
+      address: 'Kralja Petra 15',
+      city: 'Banja Luka',
       email: 'milica.milic@abc-trade.ba',
       phone: '+387 65 222 333',
-      baseSalary: 1800,
+      entity: 'RS' as any,
+      position: 'Glavni računovođa',
+      department: 'Računovodstvo',
+      grossSalary: 2200, // Mid-level salary
       employmentDate: new Date('2020-03-15'),
       companyId: companyRS.id,
     },
     {
+      personalNumber: 'RS-003',
       firstName: 'Nikola',
       lastName: 'Nikolić',
-      personalId: '2010995789012', // RS employee 3
+      jmbg: '2010995789012',
+      taxNumber: 'RS-TAX-003',
+      address: 'Srpska 7',
+      city: 'Banja Luka',
       email: 'nikola.nikolic@abc-trade.ba',
       phone: '+387 65 333 444',
-      baseSalary: 1400,
+      entity: 'RS' as any,
+      position: 'Prodavac',
+      department: 'Prodaja',
+      grossSalary: 1500, // Entry-level salary
       employmentDate: new Date('2021-06-01'),
       companyId: companyRS.id,
     },
   ];
 
+  // Federacija BiH Employees (3 employees with varying salaries)
   const employeesFBIH = [
     {
+      personalNumber: 'FBIH-001',
       firstName: 'Amina',
       lastName: 'Alagić',
-      personalId: '0505992111222', // FBIH employee 1
+      jmbg: '0505992111222',
+      taxNumber: 'FBIH-TAX-001',
+      address: 'Zmaja od Bosne 8',
+      city: 'Sarajevo',
       email: 'amina.alagic@xyz-solutions.ba',
       phone: '+387 62 111 222',
-      baseSalary: 2400,
+      entity: 'FBIH' as any,
+      position: 'IT Menadžer',
+      department: 'IT',
+      grossSalary: 4000, // High salary for IT manager
       employmentDate: new Date('2020-02-01'),
       companyId: companyFBIH.id,
     },
     {
+      personalNumber: 'FBIH-002',
       firstName: 'Emir',
       lastName: 'Eminović',
-      personalId: '1212988333444', // FBIH employee 2
+      jmbg: '1212988333444',
+      taxNumber: 'FBIH-TAX-002',
+      address: 'Ferhadija 22',
+      city: 'Sarajevo',
       email: 'emir.eminovic@xyz-solutions.ba',
       phone: '+387 62 222 333',
-      baseSalary: 1700,
+      entity: 'FBIH' as any,
+      position: 'Senior Developer',
+      department: 'IT',
+      grossSalary: 2800, // Good salary for senior dev
       employmentDate: new Date('2021-01-15'),
+      companyId: companyFBIH.id,
+    },
+    {
+      personalNumber: 'FBIH-003',
+      firstName: 'Lejla',
+      lastName: 'Lemeš',
+      jmbg: '0303997112233',
+      taxNumber: 'FBIH-TAX-003',
+      address: 'Titova 45',
+      city: 'Sarajevo',
+      email: 'lejla.lemes@xyz-solutions.ba',
+      phone: '+387 62 444 555',
+      entity: 'FBIH' as any,
+      position: 'Junior Developer',
+      department: 'IT',
+      grossSalary: 1800, // Entry-level developer salary
+      employmentDate: new Date('2023-03-01'),
       companyId: companyFBIH.id,
     },
   ];
 
+  // Brčko Distrikt Employees (2 employees)
   const employeesBD = [
     {
+      personalNumber: 'BD-001',
       firstName: 'Stefan',
       lastName: 'Stefanović',
-      personalId: '2503994555666', // BD employee 1
+      jmbg: '2503994555666',
+      taxNumber: 'BD-TAX-001',
+      address: 'Bulevar Mira 33',
+      city: 'Brčko',
       email: 'stefan.stefanovic@tech-services.ba',
       phone: '+387 66 111 222',
-      baseSalary: 2200,
+      entity: 'BD' as any,
+      position: 'Tehnički direktor',
+      department: 'Tehnika',
+      grossSalary: 3200,
       employmentDate: new Date('2020-05-01'),
       companyId: companyBD.id,
     },
     {
+      personalNumber: 'BD-002',
       firstName: 'Jelena',
       lastName: 'Jelenić',
-      personalId: '0808991777888', // BD employee 2
+      jmbg: '0808991777888',
+      taxNumber: 'BD-TAX-002',
+      address: 'Trg mladih 12',
+      city: 'Brčko',
       email: 'jelena.jelenic@tech-services.ba',
       phone: '+387 66 222 333',
-      baseSalary: 1600,
+      entity: 'BD' as any,
+      position: 'Tehnički asistent',
+      department: 'Tehnika',
+      grossSalary: 1900,
       employmentDate: new Date('2021-08-01'),
       companyId: companyBD.id,
     },
@@ -612,17 +680,17 @@ async function main() {
   const allEmployees = [...employeesRS, ...employeesFBIH, ...employeesBD];
   for (const employee of allEmployees) {
     await prisma.employee.upsert({
-      where: { personalId: employee.personalId },
-      update: {},
+      where: { jmbg: employee.jmbg },
+      update: employee,
       create: {
         ...employee,
         isActive: true,
       },
     });
   }
-  console.log(`  ✅ Created ${employeesRS.length} employees for RS company`);
-  console.log(`  ✅ Created ${employeesFBIH.length} employees for FBIH company`);
-  console.log(`  ✅ Created ${employeesBD.length} employees for BD company`);
+  console.log(`  ✅ Created ${employeesRS.length} employees for RS company (salaries: 1500-3500 KM)`);
+  console.log(`  ✅ Created ${employeesFBIH.length} employees for FBIH company (salaries: 1800-4000 KM)`);
+  console.log(`  ✅ Created ${employeesBD.length} employees for BD company (salaries: 1900-3200 KM)`);
 
   // ==================== COST CENTERS ====================
   console.log('');
